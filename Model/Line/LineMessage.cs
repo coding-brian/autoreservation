@@ -24,6 +24,7 @@ namespace Model.Line
 
         public Source source { get; set; }
 
+        public Message message { get; set; }
     }
 
     public class Source
@@ -31,7 +32,13 @@ namespace Model.Line
         public String type { get; set; }
 
         public String userId { get; set; }
-        public String text { get; set; }
 
+    }
+
+    public class Message
+    { 
+        public String id { get; set; }
+        public String type { get; set; }
+        public String text { get; set; }
     }
 }
