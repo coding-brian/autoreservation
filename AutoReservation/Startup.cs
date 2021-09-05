@@ -26,6 +26,8 @@ namespace AutoReservation
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddSwaggerGen();
+            services.AddHttpClient();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -35,6 +37,13 @@ namespace AutoReservation
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseSwagger();
+
+            app.UseSwaggerUI(x=> {
+
+                x.SwaggerEndpoint("/swagger/v1/swagger.json","api v1");
+            });
 
             app.UseHttpsRedirection();
 

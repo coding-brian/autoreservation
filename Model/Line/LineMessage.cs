@@ -20,7 +20,7 @@ namespace Model.Line
 
         public String mode { get; set; }
 
-        public int timestamp { get; set; }
+        public long timestamp { get; set; }
 
         public Source source { get; set; }
 
@@ -31,5 +31,7 @@ namespace Model.Line
         public String type { get; set; }
 
         public String userId { get; set; }
+        public String text { get; set; }
+
     }
 }
