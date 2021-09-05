@@ -27,6 +27,7 @@ namespace AutoReservation.Controllers
 
         public string LineWebhook([FromBody] LineMessage messages) 
         {
+            Console.Out.WriteLine(JsonSerializer.Serialize(messages));
             return JsonSerializer.Serialize(messages);
         }
 
