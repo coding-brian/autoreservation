@@ -25,10 +25,10 @@ namespace AutoReservation.Controllers
 
         [HttpPost("webhook")]
 
-        public string LineWebhook([FromBody] LineMessage messages) 
+        public IActionResult LineWebhook([FromBody] LineMessage messages) 
         {
             Console.Out.WriteLine(JsonSerializer.Serialize(messages));
-            return JsonSerializer.Serialize(messages);
+            return Ok();
         }
 
 
