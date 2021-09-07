@@ -34,7 +34,7 @@ namespace AutoReservation.Controllers
         public string TestLog()
         {
             Console.Out.Write("testestsets");
-            Console.Out.WriteLine("123456789");
+            Console.Out.WriteLine("測試測試");
             return "OK";
         }
 
