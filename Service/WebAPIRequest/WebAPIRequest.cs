@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -32,7 +33,7 @@ namespace Service.WebAPIRequest
 
             var request = new HttpRequestMessage(method, url);
 
-            request.Headers.Add("Content-Type", "application/json");
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
             var result = new APIResoponse();
 
