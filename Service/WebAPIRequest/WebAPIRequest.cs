@@ -24,13 +24,15 @@ namespace Service.WebAPIRequest
         /// <param name="url"></param>
         /// <param name="method"></param>
         /// <param name="headers"></param>
-        /// <param name="contents">要傳入的body，請使用Json</param>
+        /// <param name="contents">要傳入的body</param>
         /// <returns></returns>
         public async Task<APIResoponse> WebRequest<T>(String url, HttpMethod method, Dictionary<String, String> headers, T contents) where T : class
         {
             var client = _httpclient.CreateClient();
 
             var request = new HttpRequestMessage(method, url);
+
+            request.Headers.Add("Content-Type", "application/json");
 
             var result = new APIResoponse();
 
