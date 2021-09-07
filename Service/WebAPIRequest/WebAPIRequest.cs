@@ -33,11 +33,11 @@ namespace Service.WebAPIRequest
 
             var request = new HttpRequestMessage(method, url);
 
-            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            
 
             var result = new APIResoponse();
 
-            switch (url.ToString())
+            switch (method.ToString().ToLower())
             {
                 case "get":
                     Get(ref request, url, contents);
@@ -46,7 +46,7 @@ namespace Service.WebAPIRequest
                     Post(ref request, url, contents);
                     break;
             }
-
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
             if (headers.Count > 0)
             {
