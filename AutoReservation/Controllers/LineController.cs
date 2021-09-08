@@ -24,7 +24,10 @@ namespace AutoReservation.Controllers
 
         private readonly IWebAPIRequest _webAPIRequest;
 
-        public LineController(IConfiguration configuration, IWebAPIRequest webAPIRequest) {
+        private readonly string keywords = "\u9810\u7D04";
+
+        public LineController(IConfiguration configuration, IWebAPIRequest webAPIRequest) 
+        {
 
             _configuration = configuration;
             _webAPIRequest = webAPIRequest;
@@ -48,12 +51,24 @@ namespace AutoReservation.Controllers
             {
                 foreach (var messageevent in messages.events) 
                 {
-                    if (string.IsNullOrEmpty(messageevent.replyToken))
+
+                    if (messageevent.message.type=="text") 
                     {
-                        PushMessage();
-                    }
-                    else {
-                        await ReplyMessage(messageevent.replyToken, messageevent.message.text);
+                        if (string.IsNullOrEmpty(messageevent.replyToken))
+                        {
+                            PushMessage();
+                        }
+                        else
+                        {
+
+                            if (messageevent.message.text.Contains(keywords))
+                            {
+                                await ReplyMessage(messageevent.replyToken, "好的馬上提給您我們的教練");
+                            }
+                            else {
+                                await ReplyMessage(messageevent.replyToken, "一般性回覆");
+                            }
+                        }
                     }
                 }
             }
