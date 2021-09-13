@@ -119,7 +119,7 @@ namespace AutoReservation.Controllers
             action.Text = "text";
             column.action.Add(action);
             imageCarouselMessage.template.Columns.Add(column);
-
+            imageCarouselMessage.AltText = "測試測試";
             return imageCarouselMessage;
         }
     }
