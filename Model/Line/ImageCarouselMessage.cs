@@ -17,14 +17,14 @@ namespace Model.Line
     {
         public string Type { get; } = "image_carousel";
 
-        public List<Colums> Columns { get; set; }
+        public List<Colums> Columns { get; set; } = new List<Colums>();
     }
 
     public class Colums 
     {
         public string imageUrl { get; set; }
 
-        public List<Action> action { get; set; }
+        public List<Action> action { get; set; }=new List<Action>()
     }
 
     public class Action 
