@@ -12,7 +12,7 @@ namespace Model.Line
         }
         public string type { get;} = "template";
 
-        public string AltText { get; set; }
+        public string altText { get; set; }
 
         public Template template { get; set; }
     }
