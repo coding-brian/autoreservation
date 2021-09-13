@@ -24,7 +24,7 @@ namespace Model.Line
     {
         public string imageUrl { get; set; }
 
-        public List<Action> action { get; set; }=new List<Action>()
+        public List<Action> action { get; set; } = new List<Action>();
     }
 
     public class Action 
