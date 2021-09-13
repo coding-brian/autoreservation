@@ -8,13 +8,6 @@ namespace Model.Line
     {
         public string replyToken { get; set; }
 
-        public List<ReplyMessages> messages { get; set; } = new List<ReplyMessages>();
-    }
-
-    public class ReplyMessages 
-    {
-        public string type { get; set; }
-
-        public string text { get; set; }
+        public List<Object> messages { get; set; } 
     }
 }
