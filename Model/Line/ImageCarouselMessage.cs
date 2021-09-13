@@ -6,6 +6,10 @@ namespace Model.Line
 {
     public class ImageCarouselMessage
     {
+        public ImageCarouselMessage() 
+        {
+            template = new Template();
+        }
         public string type { get;} = "template";
 
         public string AltText { get; set; }
