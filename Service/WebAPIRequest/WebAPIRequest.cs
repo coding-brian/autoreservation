@@ -59,6 +59,8 @@ namespace Service.WebAPIRequest
             try 
             {
                 var response = await client.SendAsync(request);
+
+                result.message =await  response.Content.ReadAsStringAsync();
                 response.EnsureSuccessStatusCode();
                 result.body = "";
                 result.status = "200";

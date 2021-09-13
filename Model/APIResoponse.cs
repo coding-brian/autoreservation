@@ -6,8 +6,10 @@ namespace Model
 {
     public class APIResoponse
     {
-        public String status { get; set; }
+        public string status { get; set; }
 
-        public String body { get; set; }
+        public string body { get; set; }
+
+        public string message { get; set; }
     }
 }
