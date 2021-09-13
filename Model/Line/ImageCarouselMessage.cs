@@ -19,7 +19,7 @@ namespace Model.Line
 
     public class Template 
     {
-        public string Type { get; } = "image_carousel";
+        public string type { get; } = "image_carousel";
 
         public List<Colums> columns { get; set; } = new List<Colums>();
     }
