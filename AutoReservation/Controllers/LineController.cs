@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Action = Model.Line.Action;
 
 namespace AutoReservation.Controllers
 {
@@ -47,6 +48,8 @@ namespace AutoReservation.Controllers
         {
             Console.Out.WriteLine("Receive:" + JsonSerializer.Serialize(messages));
 
+            var messgae = new ImageCarouselMessage();
+
             if (messages.events.Count>0) 
             {
                 foreach (var messageevent in messages.events) 
@@ -63,13 +66,15 @@ namespace AutoReservation.Controllers
 
                             if (messageevent.message.text.Contains(keywords))
                             {
-                                await ReplyMessage(messageevent.replyToken, "好的馬上提給您我們的教練");
+                                 messgae = GenerateMessage("好的馬上提給您我們的教練");
                             }
                             else {
-                                await ReplyMessage(messageevent.replyToken, "一般性回覆");
+                                messgae= GenerateMessage("一般性回覆");
+                                
                             }
                         }
                     }
+                    await ReplyMessage(messageevent.replyToken, messgae);
                 }
             }
 
@@ -89,21 +94,33 @@ namespace AutoReservation.Controllers
         /// <summary>
         /// 用reply api 回復
         /// </summary>
-        private async Task ReplyMessage(string replytoken,string replymessage) 
+        private async Task ReplyMessage(string replytoken, Object replymessage) 
         {
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add("Authorization", $"Bearer {_lineaccesstoken}");
 
             var body = new ReplyMessageRequest();
             body.replyToken = replytoken;
-            var temp = new ReplyMessages();
-            temp.type = "text";
-            temp.text = replymessage;
-            body.messages.Add(temp);
+            body.messages.Add(replymessage);
 
             var result=await _webAPIRequest.WebRequest<ReplyMessageRequest>(_configuration["Line:ReplyMessageURL"].ToString(),HttpMethod.Post ,headers, body);
 
             Console.Out.WriteLine("ReplyMessage:" + JsonSerializer.Serialize(result));
+        }
+
+
+        private ImageCarouselMessage GenerateMessage(string text) 
+        {
+            var imageCarouselMessage = new ImageCarouselMessage();
+            var column = new Colums();
+            var action = new Action();
+            column.imageUrl = "https://i.imgur.com/YH04t4q_d.webp?maxwidth=760&fidelity=grand";
+            action.Label = "測試";
+            action.Text = "text";
+            column.action.Add(action);
+            imageCarouselMessage.template.Columns.Add(column);
+
+            return imageCarouselMessage;
         }
     }
 }
