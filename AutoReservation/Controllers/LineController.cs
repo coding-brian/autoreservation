@@ -112,14 +112,15 @@ namespace AutoReservation.Controllers
         private ImageCarouselMessage GenerateMessage(string text) 
         {
             var imageCarouselMessage = new ImageCarouselMessage();
+
             var column = new Colums();
-            var action = new Action();
             column.imageUrl = "https://i.imgur.com/YH04t4q_d.webp?maxwidth=760&fidelity=grand";
-            action.Label = "測試";
-            action.Text = "text";
-            column.action.Add(action);
-            imageCarouselMessage.template.Columns.Add(column);
-            imageCarouselMessage.altText = "測試測試";
+            column.action.label = "教練1";
+            column.action.text= text;
+
+            imageCarouselMessage.template.columns.Add(column);
+            imageCarouselMessage.altText = "教練1教練1";
+
             return imageCarouselMessage;
         }
     }

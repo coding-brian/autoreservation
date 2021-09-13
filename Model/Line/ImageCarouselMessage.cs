@@ -21,21 +21,21 @@ namespace Model.Line
     {
         public string Type { get; } = "image_carousel";
 
-        public List<Colums> Columns { get; set; } = new List<Colums>();
+        public List<Colums> columns { get; set; } = new List<Colums>();
     }
 
     public class Colums 
     {
         public string imageUrl { get; set; }
 
-        public List<Action> action { get; set; } = new List<Action>();
+        public Action action { get; set; } = new Action();
     }
 
     public class Action 
     {
-        public string Type { get; } = "message";
+        public string type { get; } = "message";
 
-        public string Label { get; set; }
-        public string Text { get; set; }
+        public string label { get; set; }
+        public string text { get; set; }
     }
 }
