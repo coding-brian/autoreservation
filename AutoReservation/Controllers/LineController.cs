@@ -118,6 +118,11 @@ namespace AutoReservation.Controllers
             column.action.label = "教練1";
             column.action.text= text;
 
+            var column2 = new Colums();
+            column.imageUrl = "https://i.imgur.com/YH04t4q_d.webp?maxwidth=760&fidelity=grand";
+            column.action.label = "教練1";
+            column.action.text = text;
+
             //var column2 = new Colums();
             //column.imageUrl = "https://imgur.com/h4xSWHO";
             //column.action.label = "教練2";
@@ -134,7 +139,7 @@ namespace AutoReservation.Controllers
             //column.action.text = text;
 
             imageCarouselMessage.template.columns.Add(column);
-            //imageCarouselMessage.template.columns.Add(column2);
+            imageCarouselMessage.template.columns.Add(column2);
             //imageCarouselMessage.template.columns.Add(column3);
             //imageCarouselMessage.template.columns.Add(column4);
             imageCarouselMessage.altText = "歡迎你選擇";
