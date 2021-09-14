@@ -119,17 +119,17 @@ namespace AutoReservation.Controllers
             column.action.text= text;
 
             var column2 = new Colums();
-            column2.imageUrl = "https://imgur.com/h4xSWHO";
+            column2.imageUrl = "https://i.imgur.com/q7u49Mj.jpg";
             column2.action.label = "教練2";
             column2.action.text = "好的";
 
             var column3 = new Colums();
-            column3.imageUrl = "https://imgur.com/Lur2TJJ";
+            column3.imageUrl = "https://i.imgur.com/lAAOAL2.jpg";
             column3.action.label = "教練3";
             column3.action.text = text;
 
             var column4 = new Colums();
-            column4.imageUrl = "https://imgur.com/aCckxcL";
+            column4.imageUrl = "https://i.imgur.com/swePqYQ.jpg";
             column4.action.label = "教練4";
             column4.action.text = text;
 
