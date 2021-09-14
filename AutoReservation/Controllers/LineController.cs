@@ -121,22 +121,22 @@ namespace AutoReservation.Controllers
             var column2 = new Colums();
             column.imageUrl = "https://imgur.com/h4xSWHO";
             column.action.label = "教練2";
-            column.action.text = text;
+            column.action.text = "好的";
 
-            var column3 = new Colums();
-            column.imageUrl = "https://imgur.com/Lur2TJJ";
-            column.action.label = "教練3";
-            column.action.text = text;
+            //var column3 = new Colums();
+            //column.imageUrl = "https://imgur.com/Lur2TJJ";
+            //column.action.label = "教練3";
+            //column.action.text = text;
 
-            var column4 = new Colums();
-            column.imageUrl = "https://imgur.com/aCckxcL";
-            column.action.label = "教練4";
-            column.action.text = text;
+            //var column4 = new Colums();
+            //column.imageUrl = "https://imgur.com/aCckxcL";
+            //column.action.label = "教練4";
+            //column.action.text = text;
 
             imageCarouselMessage.template.columns.Add(column);
             imageCarouselMessage.template.columns.Add(column2);
-            imageCarouselMessage.template.columns.Add(column3);
-            imageCarouselMessage.template.columns.Add(column4);
+            //imageCarouselMessage.template.columns.Add(column3);
+            //imageCarouselMessage.template.columns.Add(column4);
             imageCarouselMessage.altText = "歡迎你選擇";
 
             return imageCarouselMessage;
