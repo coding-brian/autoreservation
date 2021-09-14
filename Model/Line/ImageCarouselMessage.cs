@@ -33,7 +33,7 @@ namespace Model.Line
 
     public class Action 
     {
-        public string type { get; } = "message";
+        public string type { get; set; } = "message";
 
         public string label { get; set; }
         public string text { get; set; }
