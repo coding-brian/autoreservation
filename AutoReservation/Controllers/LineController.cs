@@ -129,7 +129,7 @@ namespace AutoReservation.Controllers
             column3.action.text = text;
 
             var column4 = new Colums();
-            column4.imageUrl = "https://i.imgur.com/swePqYQ.jpg";
+            column4.imageUrl = "https://i.imgur.com/swePqYQ_d.webp?maxwidth=760&fidelity=grand";
             column4.action.label = "教練4";
             column4.action.text = text;
 
