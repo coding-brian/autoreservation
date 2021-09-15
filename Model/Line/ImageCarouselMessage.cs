@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -28,7 +29,7 @@ namespace Model.Line
     {
         public string imageUrl { get; set; }
 
-        public Action action { get; set; } = new Action();
+        public JObject action { get; set; }
     }
 
     public class Action 

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Model.Line;
+using Newtonsoft.Json.Linq;
 using Service.WebAPIRequest;
 using System;
 using System.Collections.Generic;
@@ -81,7 +82,12 @@ namespace AutoReservation.Controllers
             return Ok();
         }
 
-
+        [HttpGet("test")]
+        public async Task PostBackMessage(string data,string message) 
+        {
+            Console.Out.Write(data);
+            Console.Out.WriteLine(message);
+        }
         /// <summary>
         /// 用push api 回復
         /// </summary>
@@ -115,23 +121,28 @@ namespace AutoReservation.Controllers
 
             var column = new Colums();
             column.imageUrl = "https://i.imgur.com/YH04t4q_d.webp?maxwidth=760&fidelity=grand";
-            column.action.label = "教練1";
-            column.action.text= text;
+            column.action = ActinoGenerate("message");
+            column.action["label"]= "教練1";
+            column.action["text"] = text;
+            
 
             var column2 = new Colums();
             column2.imageUrl = "https://i.imgur.com/q7u49Mj.jpg";
-            column2.action.label = "教練2";
-            column2.action.text = "好的";
+            column2.action = ActinoGenerate("message");
+            column2.action["label"] = "教練2";
+            column2.action["text"] = "好的";
 
             var column3 = new Colums();
             column3.imageUrl = "https://i.imgur.com/lAAOAL2.jpg";
-            column3.action.label = "教練3";
-            column3.action.text = text;
+            column3.action = ActinoGenerate("message");
+            column3.action["label"] = "教練3";
+            column3.action["text"] = text;
 
             var column4 = new Colums();
             column4.imageUrl = "https://i.imgur.com/swePqYQ_d.webp?maxwidth=760&fidelity=grand";
-            column4.action.label = "教練4";
-            column4.action.text = text;
+            column4.action = ActinoGenerate("message");
+            column4.action["label"] = "教練4";
+            column4.action["text"] = text;
 
             imageCarouselMessage.template.columns.Add(column);
             imageCarouselMessage.template.columns.Add(column2);
@@ -140,6 +151,27 @@ namespace AutoReservation.Controllers
             imageCarouselMessage.altText = "歡迎你選擇";
 
             return imageCarouselMessage;
+        }
+
+        private JObject ActinoGenerate(string type) 
+        {
+            var action = new JObject();
+            switch (type) 
+            {
+                case "message":
+                    action["type"] = "message";
+                    action["label"] = "";
+                    action["text"] = "";
+                    break;
+                case "postback":
+                    action["type"] = "postback";
+                    action["label"] = "";
+                    action["text"] = "";
+                    action["data"] = "";
+                    break;
+            }
+
+            return action;
         }
     }
 }
