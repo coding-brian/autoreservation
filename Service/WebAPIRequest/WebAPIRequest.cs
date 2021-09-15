@@ -33,40 +33,41 @@ namespace Service.WebAPIRequest
 
             var request = new HttpRequestMessage(method, url);
 
-            
+
 
             var result = new APIResoponse();
-
-            switch (method.ToString().ToLower())
+            try
             {
-                case "get":
-                    Get(ref request, url, contents);
-                    break;
-                case "post":
-                    Post(ref request, url, contents);
-                    break;
-            }
-            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-
-            if (headers.Count > 0)
-            {
-                foreach (var header in headers)
+                switch (method.ToString().ToLower())
                 {
-                    request.Headers.Add(header.Key, header.Value);
+                    case "get":
+                        Get(ref request, url, contents);
+                        break;
+                    case "post":
+                        Post(ref request, url, contents);
+                        break;
                 }
-            }
+                request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            try 
-            {
+                if (headers.Count > 0)
+                {
+                    foreach (var header in headers)
+                    {
+                        request.Headers.Add(header.Key, header.Value);
+                    }
+                }
+
+
                 var response = await client.SendAsync(request);
 
-                result.message =await  response.Content.ReadAsStringAsync();
+                result.message = await response.Content.ReadAsStringAsync();
                 response.EnsureSuccessStatusCode();
                 result.body = "";
                 result.status = "200";
 
-                
-            } catch (Exception ex) 
+
+            }
+            catch (Exception ex)
             {
                 result.body = ex.Message;
                 result.status = "500";
@@ -82,7 +83,7 @@ namespace Service.WebAPIRequest
             UriBuilder builder = new UriBuilder(url);
             var builderquery = HttpUtility.ParseQueryString(builder.Query);
 
-            if (queries !=null) 
+            if (queries != null)
             {
                 var dic = JsonSerializer.Deserialize<Dictionary<String, Object>>(JsonSerializer.Serialize(queries));
                 foreach (var item in dic)
