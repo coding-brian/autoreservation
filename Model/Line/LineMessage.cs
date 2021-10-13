@@ -25,6 +25,8 @@ namespace Model.Line
         public Source source { get; set; }
 
         public Message message { get; set; }
+
+        public PostBack postback { get; set; }
     }
 
     public class Source
@@ -40,5 +42,11 @@ namespace Model.Line
         public String id { get; set; }
         public String type { get; set; }
         public String text { get; set; }
+    }
+
+    public class PostBack 
+    {
+        public string data { get; set; }
+        public Object @params { get; set; }
     }
 }

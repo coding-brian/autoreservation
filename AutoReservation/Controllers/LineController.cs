@@ -1,17 +1,14 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Model.Line;
 using Newtonsoft.Json.Linq;
 using Service.WebAPIRequest;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
+using System.Text.Encodings.Web;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Action = Model.Line.Action;
 
 namespace AutoReservation.Controllers
 {
@@ -28,7 +25,7 @@ namespace AutoReservation.Controllers
 
         private readonly string keywords = "\u9810\u7D04";
 
-        public LineController(IConfiguration configuration, IWebAPIRequest webAPIRequest) 
+        public LineController(IConfiguration configuration, IWebAPIRequest webAPIRequest)
         {
 
             _configuration = configuration;
@@ -45,18 +42,18 @@ namespace AutoReservation.Controllers
 
         [HttpPost("webhook")]
 
-        public async Task<IActionResult> LineWebhook([FromBody] LineMessage messages) 
+        public async Task<IActionResult> LineWebhook([FromBody] LineMessage messages)
         {
             Console.Out.WriteLine("Receive:" + JsonSerializer.Serialize(messages));
 
             var messgae = new ImageCarouselMessage();
 
-            if (messages.events.Count>0) 
+            if (messages.events.Count > 0)
             {
-                foreach (var messageevent in messages.events) 
+                foreach (var messageevent in messages.events)
                 {
 
-                    if (messageevent.message.type=="text") 
+                    if (messageevent.message.type == "text")
                     {
                         if (string.IsNullOrEmpty(messageevent.replyToken))
                         {
@@ -67,11 +64,12 @@ namespace AutoReservation.Controllers
 
                             if (messageevent.message.text.Contains(keywords))
                             {
-                                 messgae = GenerateMessage("好的馬上提給您我們的教練");
+                                messgae = GenerateMessage("好的馬上提給您我們的教練");
                             }
-                            else {
-                                messgae= GenerateMessage("一般性回覆");
-                                
+                            else
+                            {
+                                messgae = GenerateMessage("一般性回覆");
+
                             }
                         }
                     }
@@ -83,24 +81,50 @@ namespace AutoReservation.Controllers
         }
 
         [HttpGet("test")]
-        public async Task PostBackMessage(string data,string message) 
+        public async Task PostBackMessage(string data, string message)
         {
-            Console.Out.Write(data);
-            Console.Out.WriteLine(message);
+            var imageCarouselMessage = new ImageCarouselMessage();
+
+            var messageObjct = new
+            {
+                type = "message",
+                label = "",
+                text = message
+            };
+
+            var column = new Colums();
+            column.imageUrl = "https://i.imgur.com/YH04t4q_d.webp?maxwidth=760&fidelity=grand";
+            column.action = ActinoGenerate("message", messageObjct);
+            //column.action["label"] = "教練1";
+            //column.action["text"] = "";
+
+            imageCarouselMessage.template.columns.Add(column);
+
+            var bbb = JsonSerializer.Serialize(column);
+
+            var aaa = JsonSerializer.Serialize(imageCarouselMessage);
+
+            var body = new ReplyMessageRequest();
+            body.replyToken = "";
+            body.messages.Add(imageCarouselMessage);
+
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            headers.Add("Authorization", $"Bearer {_lineaccesstoken}");
+            var result = await _webAPIRequest.WebRequest<ReplyMessageRequest>(_configuration["Line:ReplyMessageURL"].ToString(), HttpMethod.Post, headers, body);
         }
         /// <summary>
         /// 用push api 回復
         /// </summary>
-        private void PushMessage() 
+        private void PushMessage()
         {
-        
-        
+
+
         }
 
         /// <summary>
         /// 用reply api 回復
         /// </summary>
-        private async Task ReplyMessage(string replytoken, Object replymessage) 
+        private async Task ReplyMessage(string replytoken, Object replymessage)
         {
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add("Authorization", $"Bearer {_lineaccesstoken}");
@@ -109,40 +133,63 @@ namespace AutoReservation.Controllers
             body.replyToken = replytoken;
             body.messages.Add(replymessage);
 
-            var result=await _webAPIRequest.WebRequest<ReplyMessageRequest>(_configuration["Line:ReplyMessageURL"].ToString(),HttpMethod.Post ,headers, body);
+            var result = await _webAPIRequest.WebRequest<ReplyMessageRequest>(_configuration["Line:ReplyMessageURL"].ToString(), HttpMethod.Post, headers, body);
 
             Console.Out.WriteLine("ReplyMessage:" + JsonSerializer.Serialize(result));
         }
 
 
-        private ImageCarouselMessage GenerateMessage(string text) 
+        private ImageCarouselMessage GenerateMessage(string text)
         {
             var imageCarouselMessage = new ImageCarouselMessage();
 
             var column = new Colums();
             column.imageUrl = "https://i.imgur.com/YH04t4q_d.webp?maxwidth=760&fidelity=grand";
-            column.action = ActinoGenerate("message");
-            column.action["label"]= "教練1";
-            column.action["text"] = text;
-            
+            var messageObjct = new PostBackAction
+            {
+                type = "postback",
+                label = "教練1",
+                text = "你好，我是教練1，以下是我目前可以預約的時間",
+                data="showreservation=true&&coach=1"
+            };
+            column.action = ActinoGenerate("postback", messageObjct);
+
 
             var column2 = new Colums();
             column2.imageUrl = "https://i.imgur.com/q7u49Mj.jpg";
-            column2.action = ActinoGenerate("message");
-            column2.action["label"] = "教練2";
-            column2.action["text"] = "好的";
+            var messageObjct2 = new PostBackAction
+            {
+                type = "postback",
+                label = "教練2",
+                text = "你好，我是教練2，以下是我目前可以預約的時間",
+                data = "showreservation=true&&coach=2"
+            };
+            column2.action = ActinoGenerate("postback", messageObjct2);
+
 
             var column3 = new Colums();
             column3.imageUrl = "https://i.imgur.com/lAAOAL2.jpg";
-            column3.action = ActinoGenerate("message");
-            column3.action["label"] = "教練3";
-            column3.action["text"] = text;
+            var messageObject3 = new PostBackAction
+            {
+                type = "postback",
+                label = "教練3",
+                text = "你好，我是教練3，以下是我目前可以預約的時間",
+                data = "showreservation=true&&coach=3"
+            };
+            column3.action = ActinoGenerate("postback", messageObject3);
+
 
             var column4 = new Colums();
             column4.imageUrl = "https://i.imgur.com/swePqYQ_d.webp?maxwidth=760&fidelity=grand";
-            column4.action = ActinoGenerate("message");
-            column4.action["label"] = "教練4";
-            column4.action["text"] = text;
+            var messageObject4 = new PostBackAction
+            {
+                type = "postback",
+                label = "教練4",
+                text = "你好，我是教練4，以下是我目前可以預約的時間",
+                data = "showreservation=true&&coach=4"
+            };
+            column4.action = ActinoGenerate("postback", messageObject4);
+
 
             imageCarouselMessage.template.columns.Add(column);
             imageCarouselMessage.template.columns.Add(column2);
@@ -153,23 +200,40 @@ namespace AutoReservation.Controllers
             return imageCarouselMessage;
         }
 
-        private JObject ActinoGenerate(string type) 
+        private Object ActinoGenerate(string actiontype, Object dataObject)
         {
-            var action = new JObject();
-            switch (type) 
+            var action = new Object();
+            var type = dataObject.GetType();
+            try
             {
-                case "message":
-                    action["type"] = "message";
-                    action["label"] = "";
-                    action["text"] = "";
-                    break;
-                case "postback":
-                    action["type"] = "postback";
-                    action["label"] = "";
-                    action["text"] = "";
-                    action["data"] = "";
-                    break;
+                switch (actiontype)
+                {
+                    case "message":
+                        action = new MessageAction();
+                        break;
+                    case "postback":
+                        action = new PostBackAction();
+                        break;
+                }
+
+                Parallel.ForEach(type.GetProperties(), (property) =>
+                {
+
+                    var value = property.GetValue(dataObject);
+                    Parallel.ForEach((action.GetType().GetProperties()), (test) =>
+                    {
+                        if (test.Name == property.Name)
+                        {
+                            test.SetValue(action, value);
+                        }
+                    });
+                });
             }
+            catch (Exception e)
+            {
+                throw;
+            }
+
 
             return action;
         }
