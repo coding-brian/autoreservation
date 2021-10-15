@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Model;
 using Model.Line;
 using Newtonsoft.Json.Linq;
+using Repository;
 using Service.WebAPIRequest;
 using System;
 using System.Collections.Generic;
@@ -25,11 +27,13 @@ namespace AutoReservation.Controllers
 
         private readonly string keywords = "\u9810\u7D04";
 
-        public LineController(IConfiguration configuration, IWebAPIRequest webAPIRequest)
+        private readonly ICoachRepository _coachRepository;
+        public LineController(IConfiguration configuration, IWebAPIRequest webAPIRequest, ICoachRepository coachRepository)
         {
 
             _configuration = configuration;
             _webAPIRequest = webAPIRequest;
+            _coachRepository = coachRepository;
         }
 
         [HttpGet("testlog")]
@@ -80,38 +84,20 @@ namespace AutoReservation.Controllers
             return Ok();
         }
 
-        [HttpGet("test")]
-        public async Task PostBackMessage(string data, string message)
+        [HttpPost("coach")]
+        public async Task<bool> InsertCoach([FromBody] List<CoachDTO> coaches)
         {
-            var imageCarouselMessage = new ImageCarouselMessage();
+            var result = await _coachRepository.InsertCoachData(coaches);
 
-            var messageObjct = new
-            {
-                type = "message",
-                label = "",
-                text = message
-            };
-
-            var column = new Colums();
-            column.imageUrl = "https://i.imgur.com/YH04t4q_d.webp?maxwidth=760&fidelity=grand";
-            column.action = ActinoGenerate("message", messageObjct);
-            //column.action["label"] = "教練1";
-            //column.action["text"] = "";
-
-            imageCarouselMessage.template.columns.Add(column);
-
-            var bbb = JsonSerializer.Serialize(column);
-
-            var aaa = JsonSerializer.Serialize(imageCarouselMessage);
-
-            var body = new ReplyMessageRequest();
-            body.replyToken = "";
-            body.messages.Add(imageCarouselMessage);
-
-            Dictionary<string, string> headers = new Dictionary<string, string>();
-            headers.Add("Authorization", $"Bearer {_lineaccesstoken}");
-            var result = await _webAPIRequest.WebRequest<ReplyMessageRequest>(_configuration["Line:ReplyMessageURL"].ToString(), HttpMethod.Post, headers, body);
+            return result;
         }
+
+        [HttpGet("create/table")]
+        public void CreateTable()
+        {
+            _coachRepository.CreateTable();
+        }
+
         /// <summary>
         /// 用push api 回復
         /// </summary>
@@ -149,8 +135,8 @@ namespace AutoReservation.Controllers
             {
                 type = "postback",
                 label = "教練1",
-                text = "你好，我是教練1，以下是我目前可以預約的時間",
-                data="showreservation=true&&coach=1"
+                text = "我想查看教練1可以預約的時間",
+                data = "showreservation=true&&coach=1"
             };
             column.action = ActinoGenerate("postback", messageObjct);
 
@@ -161,7 +147,7 @@ namespace AutoReservation.Controllers
             {
                 type = "postback",
                 label = "教練2",
-                text = "你好，我是教練2，以下是我目前可以預約的時間",
+                text = "我想查看教練2可以預約的時間",
                 data = "showreservation=true&&coach=2"
             };
             column2.action = ActinoGenerate("postback", messageObjct2);
@@ -173,7 +159,7 @@ namespace AutoReservation.Controllers
             {
                 type = "postback",
                 label = "教練3",
-                text = "你好，我是教練3，以下是我目前可以預約的時間",
+                text = "我想查看教練3可以預約的時間",
                 data = "showreservation=true&&coach=3"
             };
             column3.action = ActinoGenerate("postback", messageObject3);
@@ -185,7 +171,7 @@ namespace AutoReservation.Controllers
             {
                 type = "postback",
                 label = "教練4",
-                text = "你好，我是教練4，以下是我目前可以預約的時間",
+                text = "我想查看教練4可以預約的時間",
                 data = "showreservation=true&&coach=4"
             };
             column4.action = ActinoGenerate("postback", messageObject4);

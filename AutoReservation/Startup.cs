@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
+using Repository;
 using Service.WebAPIRequest;
 using System;
 using System.Collections.Generic;
@@ -31,6 +32,9 @@ namespace AutoReservation
             services.AddSwaggerGen();
             services.AddHttpClient();
             services.AddScoped<IWebAPIRequest, WebAPIRequest>();
+
+            services.AddTransient<ICoachRepository, CoachRepository>();
+
             services.AddMvcCore()
         .AddNewtonsoftJson(options =>
            options.SerializerSettings.ContractResolver =
