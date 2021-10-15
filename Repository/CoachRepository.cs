@@ -12,7 +12,7 @@ namespace Repository
 
         public async Task CreateTable()
         {
-            try 
+            try
             {
                 using (var conn = new NpgsqlConnection(_connectString))
                 {
@@ -21,7 +21,7 @@ namespace Repository
                     string sql = @"
                             create table Coach(
                             id SERIAL PRIMARY KEY,
-                            name nvarchar(200) NOT NULL,
+                            name varchar(200) NOT NULL,
                             imageUrl text NOT NULL,
                             createdate bigint NOT NULL
                             )
@@ -34,8 +34,8 @@ namespace Repository
                     }
                     conn.Close();
                 }
-            } 
-            catch (Exception e) 
+            }
+            catch (Exception e)
             {
                 throw e;
             }
@@ -64,7 +64,9 @@ namespace Repository
 
                 using (var command = new NpgsqlCommand(sql))
                 {
-                    result=await command.ExecuteNonQueryAsync();
+                    command.Connection = conn;
+
+                    result = await command.ExecuteNonQueryAsync();
                 }
                 conn.Close();
             }
