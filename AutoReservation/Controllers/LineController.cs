@@ -92,10 +92,26 @@ namespace AutoReservation.Controllers
             return result;
         }
 
+        [HttpPut("coach")]
+        public async Task<bool> UpdateCoach([FromBody] List<CoachDTO> coaches)
+        {
+            var result = await _coachRepository.InsertCoachData(coaches);
+
+            return result;
+        }
+
         [HttpGet("create/table")]
         public void CreateTable()
         {
             _coachRepository.CreateTable();
+        }
+
+        [HttpGet("coach")]
+        public async Task<List<CoachDTO>> GetCoaches()
+        {
+            var result = await test();
+
+            return result;
         }
 
         /// <summary>
@@ -124,6 +140,13 @@ namespace AutoReservation.Controllers
             Console.Out.WriteLine("ReplyMessage:" + JsonSerializer.Serialize(result));
         }
 
+
+        private async Task<List<CoachDTO>> test()
+        {
+            var result = await _coachRepository.SelectCoaches();
+
+            return result;
+        }
 
         private ImageCarouselMessage GenerateMessage(string text)
         {

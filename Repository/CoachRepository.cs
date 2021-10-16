@@ -27,9 +27,8 @@ namespace Repository
                             )
                             ";
 
-                    using (var command = new NpgsqlCommand(sql))
+                    using (var command = new NpgsqlCommand(sql, conn))
                     {
-                        command.Connection = conn;
                         await command.ExecuteNonQueryAsync();
                     }
                     conn.Close();
@@ -51,20 +50,19 @@ namespace Repository
 
                 List<string> values = new List<string>();
 
-                var time = new DateTimeOffset().ToUnixTimeMilliseconds();
+                var time = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
                 foreach (var coach in coaches)
                 {
 
-                    var valueString = "(" + coach.Name + "," + coach.ImageUrl + "," + time.ToString() + ")";
+                    var valueString = "(" + "'" + coach.Name + "'" + "," + "'" + coach.ImageUrl + "'" + "," + time.ToString() + ")";
                     values.Add(valueString);
                 }
 
-                string sql = @$"INSERT INTO Coach(`name`,`imageUrl`,`createdate`) VALUES {string.Join(",", values)}";
+                string sql = @$"INSERT INTO Coach(name,imageUrl,createdate) VALUES {string.Join(",", values)}";
 
-                using (var command = new NpgsqlCommand(sql))
+                using (var command = new NpgsqlCommand(sql, conn))
                 {
-                    command.Connection = conn;
 
                     result = await command.ExecuteNonQueryAsync();
                 }
@@ -72,6 +70,59 @@ namespace Repository
             }
 
             return result > 0;
+        }
+
+        public async Task<bool> UpdateDate(List<CoachDTO> coaches)
+        {
+            int result = default;
+
+            using (var conn = new NpgsqlConnection(_connectString))
+            {
+                conn.Open();
+
+                foreach (var coach in coaches)
+                {
+                    string sql = @$"UPDATE COACH set name='{coach.Name}',ImageUrl='{coach.ImageUrl}'  where id={coach.id}";
+
+                    using (var command = new NpgsqlCommand(sql, conn))
+                    {
+                        result = await command.ExecuteNonQueryAsync();
+                    }
+                }
+                conn.Close();
+            }
+
+            return result > 0;
+        }
+
+        public async Task<List<CoachDTO>> SelectCoaches()
+        {
+            string sql = @$"SELECT * FROM Coach ";
+
+            var result = new List<CoachDTO>();
+
+            using (var conn = new NpgsqlConnection(_connectString))
+            {
+                conn.Open();
+
+                using (var command = new NpgsqlCommand(sql, conn))
+                {
+                    var reader = await command.ExecuteReaderAsync();
+
+                    while (reader.Read())
+                    {
+                        var coachDTO = new CoachDTO();
+                        coachDTO.id = reader.GetInt32(0);
+                        coachDTO.Name = reader.GetString(1);
+                        coachDTO.ImageUrl = reader.GetString(2);
+                        result.Add(coachDTO);
+                    }
+
+                }
+                conn.Close();
+            }
+
+            return result;
         }
     }
 }

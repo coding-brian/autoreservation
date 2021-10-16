@@ -8,5 +8,7 @@ namespace Repository
     {
         Task CreateTable();
         Task<bool> InsertCoachData(List<CoachDTO> coaches);
+        Task<List<CoachDTO>> SelectCoaches();
+        Task<bool> UpdateDate(List<CoachDTO> coaches);
     }
 }
