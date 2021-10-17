@@ -36,14 +36,6 @@ namespace AutoReservation.Controllers
             _coachRepository = coachRepository;
         }
 
-        [HttpGet("testlog")]
-        public string TestLog()
-        {
-            Console.Out.Write("testestsets");
-            Console.Out.WriteLine("測試測試");
-            return "OK";
-        }
-
         [HttpPost("webhook")]
 
         public async Task<IActionResult> LineWebhook([FromBody] LineMessage messages)
@@ -68,11 +60,11 @@ namespace AutoReservation.Controllers
 
                             if (messageevent.message.text.Contains(keywords))
                             {
-                                messgae = GenerateMessage("好的馬上提給您我們的教練");
+                                messgae = await GenerateMessage("好的馬上提給您我們的教練");
                             }
                             else
                             {
-                                messgae = GenerateMessage("一般性回覆");
+                                messgae = await GenerateMessage("一般性回覆");
 
                             }
                         }
@@ -109,7 +101,7 @@ namespace AutoReservation.Controllers
         [HttpGet("coach")]
         public async Task<List<CoachDTO>> GetCoaches()
         {
-            var result = await test();
+            var result = await _coachRepository.SelectCoaches();
 
             return result;
         }
@@ -140,70 +132,80 @@ namespace AutoReservation.Controllers
             Console.Out.WriteLine("ReplyMessage:" + JsonSerializer.Serialize(result));
         }
 
-
-        private async Task<List<CoachDTO>> test()
-        {
-            var result = await _coachRepository.SelectCoaches();
-
-            return result;
-        }
-
-        private ImageCarouselMessage GenerateMessage(string text)
+        private async Task<ImageCarouselMessage> GenerateMessage(string text)
         {
             var imageCarouselMessage = new ImageCarouselMessage();
 
-            var column = new Colums();
-            column.imageUrl = "https://i.imgur.com/YH04t4q_d.webp?maxwidth=760&fidelity=grand";
-            var messageObjct = new PostBackAction
+            var coaches = await GetCoaches();
+
+
+            foreach (var coach in coaches)
             {
-                type = "postback",
-                label = "教練1",
-                text = "我想查看教練1可以預約的時間",
-                data = "showreservation=true&&coach=1"
-            };
-            column.action = ActinoGenerate("postback", messageObjct);
+                var column = new Colums();
+                column.imageUrl = coach.ImageUrl;
+                var messageObjct = new PostBackAction
+                {
+                    type = "postback",
+                    label = coach.Name,
+                    text = $"我想查看{coach.Name}可以預約的時間",
+                    data = $"showreservation=true&&coach={coach.id}"
+                };
+                column.action = ActinoGenerate("postback", messageObjct);
+                imageCarouselMessage.template.columns.Add(column);
+            }
+
+            //var column = new Colums();
+            //column.imageUrl = "https://i.imgur.com/YH04t4q_d.webp?maxwidth=760&fidelity=grand";
+            //var messageObjct = new PostBackAction
+            //{
+            //    type = "postback",
+            //    label = "教練1",
+            //    text = "我想查看教練1可以預約的時間",
+            //    data = "showreservation=true&&coach=1"
+            //};
+            //column.action = ActinoGenerate("postback", messageObjct);
 
 
-            var column2 = new Colums();
-            column2.imageUrl = "https://i.imgur.com/q7u49Mj.jpg";
-            var messageObjct2 = new PostBackAction
-            {
-                type = "postback",
-                label = "教練2",
-                text = "我想查看教練2可以預約的時間",
-                data = "showreservation=true&&coach=2"
-            };
-            column2.action = ActinoGenerate("postback", messageObjct2);
+            //var column2 = new Colums();
+            //column2.imageUrl = "https://i.imgur.com/q7u49Mj.jpg";
+            //var messageObjct2 = new PostBackAction
+            //{
+            //    type = "postback",
+            //    label = "教練2",
+            //    text = "我想查看教練2可以預約的時間",
+            //    data = "showreservation=true&&coach=2"
+            //};
+            //column2.action = ActinoGenerate("postback", messageObjct2);
 
 
-            var column3 = new Colums();
-            column3.imageUrl = "https://i.imgur.com/lAAOAL2.jpg";
-            var messageObject3 = new PostBackAction
-            {
-                type = "postback",
-                label = "教練3",
-                text = "我想查看教練3可以預約的時間",
-                data = "showreservation=true&&coach=3"
-            };
-            column3.action = ActinoGenerate("postback", messageObject3);
+            //var column3 = new Colums();
+            //column3.imageUrl = "https://i.imgur.com/lAAOAL2.jpg";
+            //var messageObject3 = new PostBackAction
+            //{
+            //    type = "postback",
+            //    label = "教練3",
+            //    text = "我想查看教練3可以預約的時間",
+            //    data = "showreservation=true&&coach=3"
+            //};
+            //column3.action = ActinoGenerate("postback", messageObject3);
 
 
-            var column4 = new Colums();
-            column4.imageUrl = "https://i.imgur.com/swePqYQ_d.webp?maxwidth=760&fidelity=grand";
-            var messageObject4 = new PostBackAction
-            {
-                type = "postback",
-                label = "教練4",
-                text = "我想查看教練4可以預約的時間",
-                data = "showreservation=true&&coach=4"
-            };
-            column4.action = ActinoGenerate("postback", messageObject4);
+            //var column4 = new Colums();
+            //column4.imageUrl = "https://i.imgur.com/swePqYQ_d.webp?maxwidth=760&fidelity=grand";
+            //var messageObject4 = new PostBackAction
+            //{
+            //    type = "postback",
+            //    label = "教練4",
+            //    text = "我想查看教練4可以預約的時間",
+            //    data = "showreservation=true&&coach=4"
+            //};
+            //column4.action = ActinoGenerate("postback", messageObject4);
 
 
-            imageCarouselMessage.template.columns.Add(column);
-            imageCarouselMessage.template.columns.Add(column2);
-            imageCarouselMessage.template.columns.Add(column3);
-            imageCarouselMessage.template.columns.Add(column4);
+
+            //imageCarouselMessage.template.columns.Add(column2);
+            //imageCarouselMessage.template.columns.Add(column3);
+            //imageCarouselMessage.template.columns.Add(column4);
             imageCarouselMessage.altText = "歡迎你選擇";
 
             return imageCarouselMessage;
