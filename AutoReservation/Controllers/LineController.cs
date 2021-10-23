@@ -197,43 +197,5 @@ namespace AutoReservation.Controllers
 
             return result;
         }
-
-        private Object ActinoGenerate(string actiontype, Object dataObject)
-        {
-            var action = new Object();
-            var type = dataObject.GetType();
-            try
-            {
-                switch (actiontype)
-                {
-                    case "message":
-                        action = new MessageAction();
-                        break;
-                    case "postback":
-                        action = new PostBackAction();
-                        break;
-                }
-
-                Parallel.ForEach(type.GetProperties(), (property) =>
-                {
-
-                    var value = property.GetValue(dataObject);
-                    Parallel.ForEach((action.GetType().GetProperties()), (test) =>
-                    {
-                        if (test.Name == property.Name)
-                        {
-                            test.SetValue(action, value);
-                        }
-                    });
-                });
-            }
-            catch (Exception e)
-            {
-                throw;
-            }
-
-
-            return action;
-        }
     }
 }
