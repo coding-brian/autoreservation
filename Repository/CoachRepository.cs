@@ -2,6 +2,7 @@
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Threading.Tasks;
 
 namespace Repository
@@ -25,6 +26,37 @@ namespace Repository
                             imageUrl text NOT NULL,
                             createdate bigint NOT NULL
                             )
+                            ";
+
+                    using (var command = new NpgsqlCommand(sql, conn))
+                    {
+                        await command.ExecuteNonQueryAsync();
+                    }
+                    conn.Close();
+                }
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
+
+        public async Task CreateCoaChTimeTable()
+        {
+            try
+            {
+                using (var conn = new NpgsqlConnection(_connectString))
+                {
+                    conn.Open();
+
+                    string sql = @"
+                                CREATE TABLE CoachTime
+                                (
+                                  seqno SERIAL PRIMARY KEY,
+                                  starttime bigint NOT NULL,
+                                  endtime bigint NOT NULL,
+                                  coachid int NOT NULL
+                                )
                             ";
 
                     using (var command = new NpgsqlCommand(sql, conn))
@@ -123,6 +155,56 @@ namespace Repository
             }
 
             return result;
+        }
+
+        public async Task<CoachTimeDTO> SelectCoachesTime(int id)
+        {
+            string sql = @$"SELECT * FROM CoachTime where coachid={id} ";
+
+            var result = new CoachTimeDTO();
+
+            using (var conn = new NpgsqlConnection(_connectString))
+            {
+                conn.Open();
+
+                using (var command = new NpgsqlCommand(sql, conn))
+                {
+                    var reader = await command.ExecuteReaderAsync();
+
+                    while (reader.Read())
+                    {
+                        result.StartTime = reader.GetFieldValue<long>(1);
+                        result.EndTime = reader.GetFieldValue<long>(2);
+                        result.CoachId = reader.GetFieldValue<long>(3);
+                    }
+                }
+                conn.Close();
+            }
+
+            return result;
+        }
+
+        public async Task<bool> InsertCoachTime(CoachDTO coach) 
+        {
+            int result = default;
+
+            using (var conn = new NpgsqlConnection(_connectString))
+            {
+                conn.Open();
+
+                var valueString = "(" + "'" + coach.StartTime.ToUnixTimeMilliseconds() + "'" + "," + "'" + coach.EndTime.ToUnixTimeMilliseconds() + "'" + "," + coach.id + ")";
+
+                string sql = @$"INSERT INTO coachtime(starttime,endtime,coachid) VALUES {valueString}";
+
+                using (var command = new NpgsqlCommand(sql, conn))
+                {
+
+                    result = await command.ExecuteNonQueryAsync();
+                }
+                conn.Close();
+            }
+
+            return result > 0;
         }
     }
 }

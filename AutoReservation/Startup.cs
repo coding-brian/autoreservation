@@ -8,6 +8,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
 using Repository;
+using Service;
+using Service.MessageFatcory;
 using Service.WebAPIRequest;
 using System;
 using System.Collections.Generic;
@@ -32,6 +34,8 @@ namespace AutoReservation
             services.AddSwaggerGen();
             services.AddHttpClient();
             services.AddScoped<IWebAPIRequest, WebAPIRequest>();
+            services.AddScoped<ICoachService, CoachService>();
+            services.AddScoped<IMessageFactory, MessageFactory>();
 
             services.AddTransient<ICoachRepository, CoachRepository>();
 

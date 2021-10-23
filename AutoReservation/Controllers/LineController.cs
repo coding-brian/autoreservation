@@ -4,6 +4,8 @@ using Model;
 using Model.Line;
 using Newtonsoft.Json.Linq;
 using Repository;
+using Service;
+using Service.MessageFatcory;
 using Service.WebAPIRequest;
 using System;
 using System.Collections.Generic;
@@ -28,21 +30,25 @@ namespace AutoReservation.Controllers
         private readonly string keywords = "\u9810\u7D04";
 
         private readonly ICoachRepository _coachRepository;
-        public LineController(IConfiguration configuration, IWebAPIRequest webAPIRequest, ICoachRepository coachRepository)
+
+        private readonly ICoachService _coachService;
+
+        private readonly IMessageFactory _messageFactory;
+        public LineController(IConfiguration configuration, IWebAPIRequest webAPIRequest, ICoachRepository coachRepository, ICoachService coachService, IMessageFactory messageFactory)
         {
 
             _configuration = configuration;
             _webAPIRequest = webAPIRequest;
             _coachRepository = coachRepository;
+            _coachService = coachService;
+            _messageFactory = messageFactory;
         }
 
         [HttpPost("webhook")]
 
         public async Task<IActionResult> LineWebhook([FromBody] LineMessage messages)
         {
-            Console.Out.WriteLine("Receive:" + JsonSerializer.Serialize(messages));
-
-            var messgae = new ImageCarouselMessage();
+            var messgae = new object();
 
             if (messages.events.Count > 0)
             {
@@ -60,11 +66,11 @@ namespace AutoReservation.Controllers
 
                             if (messageevent.message.text.Contains(keywords))
                             {
-                                messgae = await GenerateMessage("好的馬上提給您我們的教練");
+                                messgae = await GenerateImageCarourselMessage();
                             }
                             else
                             {
-                                messgae = await GenerateMessage("一般性回覆");
+                                messgae = GenerateTextMessage("一般性回覆");
 
                             }
                         }
@@ -98,12 +104,37 @@ namespace AutoReservation.Controllers
             _coachRepository.CreateTable();
         }
 
+        [HttpGet("create/CoashTime")]
+        public async Task CreateCoachTime()
+        {
+            await _coachRepository.CreateCoaChTimeTable();
+        }
+
         [HttpGet("coach")]
         public async Task<List<CoachDTO>> GetCoaches()
         {
             var result = await _coachRepository.SelectCoaches();
 
             return result;
+        }
+
+        [HttpGet("coachtime")]
+        public async Task<CoachDTO> GetCoachTime(int id)
+        {
+            var result = await _coachService.GetCoachTime(id);
+
+            var a = result.StartTime.ToString("yyyy/MM/dd HH:mm:ss");
+
+            return result;
+        }
+
+        [HttpPost("coachtime")]
+        public async Task InsertCoachTime([FromBody] List<CoachDTO> coachTimeDTOs)
+        {
+            foreach (var coach in coachTimeDTOs)
+            {
+                var result = await _coachRepository.InsertCoachTime(coach);
+            }
         }
 
         /// <summary>
@@ -132,16 +163,17 @@ namespace AutoReservation.Controllers
             Console.Out.WriteLine("ReplyMessage:" + JsonSerializer.Serialize(result));
         }
 
-        private async Task<ImageCarouselMessage> GenerateMessage(string text)
+        private async Task<ImageCarouselMessage> GenerateImageCarourselMessage()
         {
-            var imageCarouselMessage = new ImageCarouselMessage();
+            var result = new ImageCarouselMessage();
+
+            var columns = new List<Column>();
 
             var coaches = await GetCoaches();
 
-
             foreach (var coach in coaches)
             {
-                var column = new Colums();
+                var column = new Column();
                 column.imageUrl = coach.ImageUrl;
                 var messageObjct = new PostBackAction
                 {
@@ -150,65 +182,20 @@ namespace AutoReservation.Controllers
                     text = $"我想查看{coach.Name}可以預約的時間",
                     data = $"showreservation=true&&coach={coach.id}"
                 };
-                column.action = ActinoGenerate("postback", messageObjct);
-                imageCarouselMessage.template.columns.Add(column);
+                column.action = _messageFactory.ActinoGenerate("postback", messageObjct);
+                columns.Add(column);
             }
 
-            //var column = new Colums();
-            //column.imageUrl = "https://i.imgur.com/YH04t4q_d.webp?maxwidth=760&fidelity=grand";
-            //var messageObjct = new PostBackAction
-            //{
-            //    type = "postback",
-            //    label = "教練1",
-            //    text = "我想查看教練1可以預約的時間",
-            //    data = "showreservation=true&&coach=1"
-            //};
-            //column.action = ActinoGenerate("postback", messageObjct);
+            result = _messageFactory.GenerateImageCarouselMessage("歡迎你選擇", columns);
 
+            return result;
+        }
 
-            //var column2 = new Colums();
-            //column2.imageUrl = "https://i.imgur.com/q7u49Mj.jpg";
-            //var messageObjct2 = new PostBackAction
-            //{
-            //    type = "postback",
-            //    label = "教練2",
-            //    text = "我想查看教練2可以預約的時間",
-            //    data = "showreservation=true&&coach=2"
-            //};
-            //column2.action = ActinoGenerate("postback", messageObjct2);
+        private TextMessage GenerateTextMessage(string text)
+        {
+            var result = _messageFactory.GenerateTextMessageAsyc(text);
 
-
-            //var column3 = new Colums();
-            //column3.imageUrl = "https://i.imgur.com/lAAOAL2.jpg";
-            //var messageObject3 = new PostBackAction
-            //{
-            //    type = "postback",
-            //    label = "教練3",
-            //    text = "我想查看教練3可以預約的時間",
-            //    data = "showreservation=true&&coach=3"
-            //};
-            //column3.action = ActinoGenerate("postback", messageObject3);
-
-
-            //var column4 = new Colums();
-            //column4.imageUrl = "https://i.imgur.com/swePqYQ_d.webp?maxwidth=760&fidelity=grand";
-            //var messageObject4 = new PostBackAction
-            //{
-            //    type = "postback",
-            //    label = "教練4",
-            //    text = "我想查看教練4可以預約的時間",
-            //    data = "showreservation=true&&coach=4"
-            //};
-            //column4.action = ActinoGenerate("postback", messageObject4);
-
-
-
-            //imageCarouselMessage.template.columns.Add(column2);
-            //imageCarouselMessage.template.columns.Add(column3);
-            //imageCarouselMessage.template.columns.Add(column4);
-            imageCarouselMessage.altText = "歡迎你選擇";
-
-            return imageCarouselMessage;
+            return result;
         }
 
         private Object ActinoGenerate(string actiontype, Object dataObject)

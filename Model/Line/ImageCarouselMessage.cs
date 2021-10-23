@@ -22,10 +22,10 @@ namespace Model.Line
     {
         public string type { get; } = "image_carousel";
 
-        public List<Colums> columns { get; set; } = new List<Colums>();
+        public List<Column> columns { get; set; } = new List<Column>();
     }
 
-    public class Colums
+    public class Column
     {
         public string imageUrl { get; set; }
 
