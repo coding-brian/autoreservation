@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Configuration;
 using Model;
 using Model.Line;
-using Newtonsoft.Json.Linq;
 using Repository;
 using Service;
 using Service.MessageFatcory;
@@ -10,9 +9,9 @@ using Service.WebAPIRequest;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace AutoReservation.Controllers
 {
@@ -55,25 +54,50 @@ namespace AutoReservation.Controllers
                 foreach (var messageevent in messages.events)
                 {
 
-                    if (messageevent.message.type == "text")
+                    switch (messageevent.type)
                     {
-                        if (string.IsNullOrEmpty(messageevent.replyToken))
-                        {
-                            PushMessage();
-                        }
-                        else
-                        {
-
-                            if (messageevent.message.text.Contains(keywords))
+                        case "message":
+                            if (messageevent.message.type == "text")
                             {
-                                messgae = await GenerateImageCarourselMessage();
-                            }
-                            else
-                            {
-                                messgae = GenerateTextMessage("一般性回覆");
+                                if (string.IsNullOrEmpty(messageevent.replyToken))
+                                {
+                                    PushMessage();
+                                }
+                                else
+                                {
 
+                                    if (messageevent.message.text.Contains(keywords))
+                                    {
+                                        messgae = await GenerateImageCarourselMessage();
+                                    }
+                                    else
+                                    {
+                                        messgae = GenerateTextMessage("一般性回覆");
+
+                                    }
+                                }
                             }
-                        }
+                            break;
+                        case "postback":
+                            var request = Request.Scheme + "://" + Request.Host;
+                            Uri uri = new Uri(request + "?" + messageevent.postback.data);
+                            var uriQuery = HttpUtility.ParseQueryString(uri.Query);
+                            var showReservation = uriQuery.Get("showreservation");
+                            var coachId = Convert.ToInt32(uriQuery.Get("coach"));
+                            var coachTime = await _coachService.GetCoachTime(coachId);
+
+                            var timeList = new List<string>();
+                            foreach (var coach in coachTime)
+                            {
+                                var aaa = coach.StartTime.ToString("yyyy/MM/dd HH:mm:ss") + "~" + coach.EndTime.ToString("yyyy/MM/dd HH:mm:ss");
+                                timeList.Add(aaa);
+                            }
+
+                            var temp = "請排除以下時間，再輸入您要預約的時間:\n" + string.Join("\n", timeList);
+
+                            messgae = GenerateTextMessage(temp);
+
+                            break;
                     }
                     await ReplyMessage(messageevent.replyToken, messgae);
                 }
@@ -118,15 +142,15 @@ namespace AutoReservation.Controllers
             return result;
         }
 
-        [HttpGet("coachtime")]
-        public async Task<CoachDTO> GetCoachTime(int id)
-        {
-            var result = await _coachService.GetCoachTime(id);
+        //[HttpGet("coachtime")]
+        //public async Task<CoachDTO> GetCoachTime(int id)
+        //{
+        //    var result = await _coachService.GetCoachTime(id);
 
-            var a = result.StartTime.ToString("yyyy/MM/dd HH:mm:ss");
+        //    var a = result.StartTime.ToString("yyyy/MM/dd HH:mm:ss");
 
-            return result;
-        }
+        //    return result;
+        //}
 
         [HttpPost("coachtime")]
         public async Task InsertCoachTime([FromBody] List<CoachDTO> coachTimeDTOs)
@@ -179,7 +203,7 @@ namespace AutoReservation.Controllers
                 {
                     type = "postback",
                     label = coach.Name,
-                    text = $"我想查看{coach.Name}可以預約的時間",
+                    //text = $"我想查看{coach.Name}可以預約的時間",
                     data = $"showreservation=true&&coach={coach.id}"
                 };
                 column.action = _messageFactory.ActinoGenerate("postback", messageObjct);

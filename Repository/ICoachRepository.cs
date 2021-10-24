@@ -10,7 +10,7 @@ namespace Repository
         Task CreateTable();
         Task<bool> InsertCoachData(List<CoachDTO> coaches);
         Task<List<CoachDTO>> SelectCoaches();
-        Task<CoachTimeDTO> SelectCoachesTime(int id);
+        Task<List<CoachTimeDTO>> SelectCoachesTime(int id);
         Task<bool> UpdateDate(List<CoachDTO> coaches);
 
         Task<bool> InsertCoachTime(CoachDTO coach);

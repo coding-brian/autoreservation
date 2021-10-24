@@ -157,11 +157,11 @@ namespace Repository
             return result;
         }
 
-        public async Task<CoachTimeDTO> SelectCoachesTime(int id)
+        public async Task<List<CoachTimeDTO>> SelectCoachesTime(int id)
         {
             string sql = @$"SELECT * FROM CoachTime where coachid={id} ";
 
-            var result = new CoachTimeDTO();
+            var result = new List<CoachTimeDTO>();
 
             using (var conn = new NpgsqlConnection(_connectString))
             {
@@ -173,9 +173,11 @@ namespace Repository
 
                     while (reader.Read())
                     {
-                        result.StartTime = reader.GetFieldValue<long>(1);
-                        result.EndTime = reader.GetFieldValue<long>(2);
-                        result.CoachId = reader.GetFieldValue<long>(3);
+                        var coachTime = new CoachTimeDTO();
+                        coachTime.StartTime = reader.GetFieldValue<long>(1);
+                        coachTime.EndTime = reader.GetFieldValue<long>(2);
+                        coachTime.CoachId = reader.GetFieldValue<long>(3);
+                        result.Add(coachTime);
                     }
                 }
                 conn.Close();
@@ -184,7 +186,7 @@ namespace Repository
             return result;
         }
 
-        public async Task<bool> InsertCoachTime(CoachDTO coach) 
+        public async Task<bool> InsertCoachTime(CoachDTO coach)
         {
             int result = default;
 

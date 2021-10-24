@@ -16,19 +16,25 @@ namespace Service
             _coachRepository = coachRepository;
         }
 
-        public async Task<CoachDTO> GetCoachTime(int id)
+        public async Task<List<CoachDTO>> GetCoachTime(int id)
         {
             var coaches = await _coachRepository.SelectCoachesTime(id);
 
-            var startTime = DateTimeOffset.FromUnixTimeMilliseconds(coaches.StartTime);
+            var result = new List<CoachDTO>();
 
-            var endTime = DateTimeOffset.FromUnixTimeMilliseconds(coaches.EndTime);
+            foreach (var caoch in coaches)
+            {
+                var coachObj = new CoachDTO();
+                var startTime = DateTimeOffset.FromUnixTimeMilliseconds(caoch.StartTime);
 
-            var result = new CoachDTO();
+                var endTime = DateTimeOffset.FromUnixTimeMilliseconds(caoch.EndTime);
 
-            result.id = id;
-            result.StartTime = startTime.ToLocalTime();
-            result.EndTime = endTime.ToLocalTime();
+                coachObj.id = id;
+                coachObj.StartTime = startTime.ToLocalTime();
+                coachObj.EndTime = endTime.ToLocalTime();
+
+                result.Add(coachObj);
+            }
 
             return result;
         }

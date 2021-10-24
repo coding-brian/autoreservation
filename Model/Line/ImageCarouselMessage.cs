@@ -46,6 +46,6 @@ namespace Model.Line
 
         public string label { get; set; }
         public string data { get; set; }
-        public string text { get; set; }
+        //public string text { get; set; }
     }
 }
