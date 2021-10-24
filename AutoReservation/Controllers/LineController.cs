@@ -53,6 +53,8 @@ namespace AutoReservation.Controllers
             {
                 foreach (var messageevent in messages.events)
                 {
+                    var userId = messageevent.source.userId;
+                    UserReservationProcession userReservationProcession = new UserReservationProcession();
 
                     switch (messageevent.type)
                     {
@@ -68,12 +70,48 @@ namespace AutoReservation.Controllers
 
                                     if (messageevent.message.text.Contains(keywords))
                                     {
+                                        UserReservation.Initial();
+                                        userReservationProcession.UserId = userId;
+                                        UserReservation.Add(userReservationProcession);
+                                        ChangeUserReservationProcessing(userId, ReservationProcession.ChooseingCoaches);
                                         messgae = await GenerateImageCarourselMessage();
                                     }
                                     else
                                     {
-                                        messgae = GenerateTextMessage("一般性回覆");
+                                        var coach = UserReservation.GetUserCoach(userId);
+                                        switch (UserReservation.GetUserReservationProcession(userId)?.ReservationProcession)
+                                        {
+                                            case ReservationProcession.ChooseingCoaches:
+                                                //要進入輸入開始時間
+                                                ChangeUserReservationProcessing(messageevent.source.userId, ReservationProcession.InputStartTime);
 
+                                                messgae = GenerateTextMessage("請輸入開始時間");
+                                                break;
+                                            case ReservationProcession.InputStartTime:
+                                                var inputStartTime = DateTimeOffset.Parse(messageevent.message.text);
+                                                coach.StartTime = inputStartTime;
+                                                UserReservation.InsertCoachTime(coach, userId);
+
+                                                //要進入結束時間
+                                                ChangeUserReservationProcessing(messageevent.source.userId, ReservationProcession.InputEndTime);
+                                                messgae = GenerateTextMessage("請輸入結束時間");
+                                                break;
+                                            case ReservationProcession.InputEndTime:
+                                                var inputEndTime = DateTimeOffset.Parse(messageevent.message.text);
+                                                coach.EndTime = inputEndTime;
+                                                UserReservation.InsertCoachTime(coach, userId);
+
+                                                var userCoach=UserReservation.GetUserCoach(userId);
+                                                await _coachRepository.InsertCoachTime(userCoach);
+
+                                                //要進入流程結束
+                                                ChangeUserReservationProcessing(messageevent.source.userId, ReservationProcession.EndProcessing);
+                                                messgae = GenerateTextMessage("謝謝你");
+                                                break;
+                                            default:
+                                                messgae = GenerateTextMessage(messageevent.message.text);
+                                                break;
+                                        }
                                     }
                                 }
                             }
@@ -85,6 +123,11 @@ namespace AutoReservation.Controllers
                             var showReservation = uriQuery.Get("showreservation");
                             var coachId = Convert.ToInt32(uriQuery.Get("coach"));
                             var coachTime = await _coachService.GetCoachTime(coachId);
+
+                            CoachDTO coachdto = new CoachDTO();
+                            coachdto.id = coachId;
+                            UserReservation.InsertCoachTime(coachdto, userId);
+                            ChangeUserReservationProcessing(messageevent.source.userId, ReservationProcession.InputStartTime);
 
                             var timeList = new List<string>();
                             foreach (var coach in coachTime)
@@ -141,16 +184,6 @@ namespace AutoReservation.Controllers
 
             return result;
         }
-
-        //[HttpGet("coachtime")]
-        //public async Task<CoachDTO> GetCoachTime(int id)
-        //{
-        //    var result = await _coachService.GetCoachTime(id);
-
-        //    var a = result.StartTime.ToString("yyyy/MM/dd HH:mm:ss");
-
-        //    return result;
-        //}
 
         [HttpPost("coachtime")]
         public async Task InsertCoachTime([FromBody] List<CoachDTO> coachTimeDTOs)
@@ -220,6 +253,17 @@ namespace AutoReservation.Controllers
             var result = _messageFactory.GenerateTextMessageAsyc(text);
 
             return result;
+        }
+
+        private void ChangeUserReservationProcessing(string userId, ReservationProcession reservationProcession)
+        {
+            if (!string.IsNullOrEmpty(userId))
+            {
+                if (UserReservation.IsExist(userId))
+                {
+                    UserReservation.ChangeUserProcessing(userId, reservationProcession);
+                }
+            }
         }
     }
 }
