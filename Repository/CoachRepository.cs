@@ -72,6 +72,36 @@ namespace Repository
             }
         }
 
+        public async Task CreateUserCoachTimeTable()
+        {
+            try
+            {
+                using (var conn = new NpgsqlConnection(_connectString))
+                {
+                    conn.Open();
+
+                    string sql = @"
+                                CREATE TABLE UserCoachTime
+                                (
+                                  seqno SERIAL PRIMARY KEY,
+                                  userId varchar(200) NOT NULL,
+                                  coachTiemNo int NOT NULL
+                                )
+                            ";
+
+                    using (var command = new NpgsqlCommand(sql, conn))
+                    {
+                        await command.ExecuteNonQueryAsync();
+                    }
+                    conn.Close();
+                }
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
+
         public async Task<bool> InsertCoachData(List<CoachDTO> coaches)
         {
             int result = default;
@@ -186,9 +216,9 @@ namespace Repository
             return result;
         }
 
-        public async Task<bool> InsertCoachTime(CoachDTO coach)
+        public async Task<int> InsertCoachTime(CoachDTO coach)
         {
-            int result = default;
+            object result = default;
 
             using (var conn = new NpgsqlConnection(_connectString))
             {
@@ -196,7 +226,30 @@ namespace Repository
 
                 var valueString = "(" + "'" + coach.StartTime.ToUnixTimeMilliseconds() + "'" + "," + "'" + coach.EndTime.ToUnixTimeMilliseconds() + "'" + "," + coach.id + ")";
 
-                string sql = @$"INSERT INTO coachtime(starttime,endtime,coachid) VALUES {valueString}";
+                string sql = @$"INSERT INTO coachtime(starttime,endtime,coachid) VALUES {valueString} RETURNING seqno";
+
+                using (var command = new NpgsqlCommand(sql, conn))
+                {
+
+                    result = await command.ExecuteScalarAsync();
+                }
+                conn.Close();
+            }
+
+            return Convert.ToInt32(result);
+        }
+
+        public async Task<bool> InsertUserCoachTime(UserCoachTimeDTO userCoachTimeDTO)
+        {
+            int result = default;
+
+            using (var conn = new NpgsqlConnection(_connectString))
+            {
+                conn.Open();
+
+                var valueString = "(" + "'" + userCoachTimeDTO.userId + "'" + "," + "'" + userCoachTimeDTO.coachTiemNo + "'" + ")";
+
+                string sql = @$"INSERT INTO UserCoachTime(userId,coachTiemNo) VALUES {valueString}";
 
                 using (var command = new NpgsqlCommand(sql, conn))
                 {

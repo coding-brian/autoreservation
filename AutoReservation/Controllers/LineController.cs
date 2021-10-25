@@ -44,7 +44,6 @@ namespace AutoReservation.Controllers
         }
 
         [HttpPost("webhook")]
-
         public async Task<IActionResult> LineWebhook([FromBody] LineMessage messages)
         {
             var messgae = new object();
@@ -102,7 +101,11 @@ namespace AutoReservation.Controllers
                                                 UserReservation.InsertCoachTime(coach, userId);
 
                                                 var userCoach=UserReservation.GetUserCoach(userId);
-                                                await _coachRepository.InsertCoachTime(userCoach);
+                                                var coachTimeNo=await _coachRepository.InsertCoachTime(userCoach);
+                                                UserCoachTimeDTO userCoachTimeDTO = new UserCoachTimeDTO();
+                                                userCoachTimeDTO.coachTiemNo = coachTimeNo;
+                                                userCoachTimeDTO.userId = userId;
+                                                await _coachRepository.InsertUserCoachTime(userCoachTimeDTO);
 
                                                 //要進入流程結束
                                                 ChangeUserReservationProcessing(messageevent.source.userId, ReservationProcession.EndProcessing);
@@ -175,6 +178,12 @@ namespace AutoReservation.Controllers
         public async Task CreateCoachTime()
         {
             await _coachRepository.CreateCoaChTimeTable();
+        }
+
+        [HttpGet("create/UserCoachTime")]
+        public async Task CreateUserCoachTime() 
+        {
+            await _coachRepository.CreateUserCoachTimeTable();
         }
 
         [HttpGet("coach")]
