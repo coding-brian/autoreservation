@@ -4,8 +4,10 @@ using Model;
 using Model.Line;
 using Repository;
 using Service;
+using Service.GenerateMessage;
 using Service.MessageFatcory;
 using Service.WebAPIRequest;
+using Service.WordProcess;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -37,7 +39,10 @@ namespace AutoReservation.Controllers
         private readonly IMessageFactory _messageFactory;
 
         private readonly IChangeUserCoachProcess _changeUserCoachProcess;
-        public LineController(IConfiguration configuration, IWebAPIRequest webAPIRequest, ICoachRepository coachRepository, ICoachService coachService, IMessageFactory messageFactory, IChangeUserCoachProcess changeUserCoachProcess)
+
+        private readonly IGenerateMessage _generateMessage;
+
+        public LineController(IConfiguration configuration, IWebAPIRequest webAPIRequest, ICoachRepository coachRepository, ICoachService coachService, IMessageFactory messageFactory, IChangeUserCoachProcess changeUserCoachProcess, IWordPrcoessFactory wordPrcoessFactory, IGenerateMessage generateMessage)
         {
 
             _configuration = configuration;
@@ -46,12 +51,13 @@ namespace AutoReservation.Controllers
             _coachService = coachService;
             _messageFactory = messageFactory;
             _changeUserCoachProcess = changeUserCoachProcess;
+            _generateMessage = generateMessage;
         }
 
         [HttpPost("webhook")]
         public async Task<IActionResult> LineWebhook([FromBody] LineMessage messages)
         {
-            var messgae = new object();
+            var returnMessage = new object();
 
             if (messages.events.Count > 0)
             {
@@ -71,72 +77,9 @@ namespace AutoReservation.Controllers
                                 }
                                 else
                                 {
-
-                                    if (messageevent.message.text.Contains(keywords))
-                                    {
-                                        UserReservation.Initial();
-                                        userReservationProcession.UserId = userId;
-                                        UserReservation.Add(userReservationProcession);
-                                        ChangeUserReservationProcessing(userId, ReservationProcession.ChooseingCoaches);
-                                        messgae = await GenerateImageCarourselMessage();
-                                    }
-                                    else
-                                    {
-                                        if (messageevent.message.text.Contains(select))
-                                        {
-                                            //查詢
-                                            var coachUserTimes = await _coachRepository.SelectUserCoachTime(userId);
-
-                                            var messageObjectList = new List<string>();
-
-                                            foreach (var coachUserTime in coachUserTimes)
-                                            {
-                                                var messageObject = $"教練名稱:{coachUserTime.Name}，" +
-                                                    $"開始時間:{DateTimeOffset.FromUnixTimeMilliseconds(coachUserTime.StartTime).ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")}，" +
-                                                    $"結束時間:{DateTimeOffset.FromUnixTimeMilliseconds(coachUserTime.EndTime).ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")}";
-
-                                                messageObjectList.Add(messageObject);
-                                            }
-
-
-
-                                            messgae = GenerateTextMessage(string.Join("\n", messageObjectList));
-                                        }
-                                        else
-                                        {
-                                            switch (UserReservation.GetUserReservationProcession(userId)?.ReservationProcession)
-                                            {
-                                                case ReservationProcession.ChooseingCoaches:
-                                                    //要進入輸入開始時間
-                                                    ChangeUserReservationProcessing(messageevent.source.userId, ReservationProcession.InputStartTime);
-
-                                                    messgae = GenerateTextMessage("請輸入開始時間");
-                                                    break;
-                                                case ReservationProcession.InputStartTime:
-                                                    //要進入結束時間
-
-                                                    _changeUserCoachProcess.UserStartTime(messageevent.message.text, userId);
-
-                                                    ChangeUserReservationProcessing(messageevent.source.userId, ReservationProcession.InputEndTime);
-                                                    messgae = GenerateTextMessage("請輸入結束時間");
-                                                    break;
-                                                case ReservationProcession.InputEndTime:
-
-                                                    _changeUserCoachProcess.UserEndTime(messageevent.message.text, userId);
-
-                                                    await _changeUserCoachProcess.InsertUserCoah(userId);
-
-                                                    //要進入流程結束
-                                                    ChangeUserReservationProcessing(messageevent.source.userId, ReservationProcession.EndProcessing);
-                                                    messgae = GenerateTextMessage("謝謝你");
-                                                    UserReservation.Clear(userId);
-                                                    break;
-                                                default:
-                                                    messgae = GenerateTextMessage(messageevent.message.text);
-                                                    break;
-                                            }
-                                        }
-                                    }
+                                    var factory = new WordPrcoessFactory(_coachRepository, _changeUserCoachProcess, _generateMessage);
+                                    var wordProcess = factory.Create(messageevent.message.text, userId);
+                                    returnMessage = await wordProcess.ProcessWord(userId);
                                 }
                             }
                             break;
@@ -150,8 +93,8 @@ namespace AutoReservation.Controllers
 
                             CoachDTO coachdto = new CoachDTO();
                             coachdto.id = coachId;
-                            UserReservation.InsertCoachTime(coachdto, userId);
-                            ChangeUserReservationProcessing(messageevent.source.userId, ReservationProcession.InputStartTime);
+                            UserReservation.UpdateCoachTime(coachdto, userId);
+                            UserReservation.ChangeUserProcessing(messageevent.source.userId, ReservationProcession.InputStartTime);
 
                             var timeList = new List<string>();
                             foreach (var coach in coachTime)
@@ -162,11 +105,11 @@ namespace AutoReservation.Controllers
 
                             var temp = "請排除以下時間，再輸入您要預約的時間:\n" + string.Join("\n", timeList);
 
-                            messgae = GenerateTextMessage(temp);
+                            returnMessage = _generateMessage.GenerateTextMessage(temp);
 
                             break;
                     }
-                    await ReplyMessage(messageevent.replyToken, messgae);
+                    await ReplyMessage(messageevent.replyToken, returnMessage);
                 }
             }
 
@@ -248,52 +191,6 @@ namespace AutoReservation.Controllers
             var result = await _webAPIRequest.WebRequest<ReplyMessageRequest>(_configuration["Line:ReplyMessageURL"].ToString(), HttpMethod.Post, headers, body);
 
             Console.Out.WriteLine("ReplyMessage:" + JsonSerializer.Serialize(result));
-        }
-
-        private async Task<ImageCarouselMessage> GenerateImageCarourselMessage()
-        {
-            var result = new ImageCarouselMessage();
-
-            var columns = new List<Column>();
-
-            var coaches = await GetCoaches();
-
-            foreach (var coach in coaches)
-            {
-                var column = new Column();
-                column.imageUrl = coach.ImageUrl;
-                var messageObjct = new PostBackAction
-                {
-                    type = "postback",
-                    label = coach.Name,
-                    //text = $"我想查看{coach.Name}可以預約的時間",
-                    data = $"showreservation=true&&coach={coach.id}"
-                };
-                column.action = _messageFactory.ActinoGenerate("postback", messageObjct);
-                columns.Add(column);
-            }
-
-            result = _messageFactory.GenerateImageCarouselMessage("歡迎你選擇", columns);
-
-            return result;
-        }
-
-        private TextMessage GenerateTextMessage(string text)
-        {
-            var result = _messageFactory.GenerateTextMessageAsyc(text);
-
-            return result;
-        }
-
-        private void ChangeUserReservationProcessing(string userId, ReservationProcession reservationProcession)
-        {
-            if (!string.IsNullOrEmpty(userId))
-            {
-                if (UserReservation.IsExist(userId))
-                {
-                    UserReservation.ChangeUserProcessing(userId, reservationProcession);
-                }
-            }
         }
     }
 }

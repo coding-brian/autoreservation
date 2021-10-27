@@ -21,7 +21,7 @@ namespace Service
             var coach = UserReservation.GetUserCoach(userId);
             var inputStartTime = DateTimeOffset.Parse(dateTiemString);
             coach.StartTime = inputStartTime;
-            UserReservation.InsertCoachTime(coach, userId);
+            UserReservation.UpdateCoachTime(coach, userId);
         }
 
         public void UserEndTime(string dateTimeString, string userId)
@@ -29,7 +29,7 @@ namespace Service
             var coach = UserReservation.GetUserCoach(userId);
             var inputEndTime = DateTimeOffset.Parse(dateTimeString);
             coach.EndTime = inputEndTime;
-            UserReservation.InsertCoachTime(coach, userId);
+            UserReservation.UpdateCoachTime(coach, userId);
         }
 
         public async Task InsertUserCoah(string userId)

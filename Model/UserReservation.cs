@@ -63,26 +63,32 @@ namespace Model
 
         public static void ChangeUserProcessing(string userId, ReservationProcession reservationProcession)
         {
-            var user = instance.TakeWhile(x => x.UserId == userId).ToList();
-
-            user.ForEach(x =>
+            if (!string.IsNullOrEmpty(userId))
             {
-                if (x.UserId == userId)
+                if (IsExist(userId))
                 {
-                    x.ReservationProcession = reservationProcession;
+                    var user = instance.TakeWhile(x => x.UserId == userId).ToList();
+
+                    user.ForEach(x =>
+                    {
+                        if (x.UserId == userId)
+                        {
+                            x.ReservationProcession = reservationProcession;
+                        }
+                    });
                 }
-            });
+            }
         }
 
-        public static UserReservationProcession GetUserReservationProcession(string userId)
+        public static ReservationProcession? GetUserReservationProcession(string userId)
         {
 
             var user = instance?.TakeWhile(x => x.UserId == userId)?.FirstOrDefault();
 
-            return user;
+            return user?.ReservationProcession;
         }
 
-        public static void InsertCoachTime(CoachDTO coachDTO, string userId)
+        public static void UpdateCoachTime(CoachDTO coachDTO, string userId)
         {
             var user = instance.TakeWhile(x => x.UserId == userId).ToList();
 

@@ -38,5 +38,12 @@ namespace Service
 
             return result;
         }
+
+        public async Task<List<CoachDTO>> GetCoaches()
+        {
+            var result = await _coachRepository.SelectCoaches();
+
+            return result;
+        }
     }
 }

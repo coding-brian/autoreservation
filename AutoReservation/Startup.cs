@@ -9,8 +9,10 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
 using Repository;
 using Service;
+using Service.GenerateMessage;
 using Service.MessageFatcory;
 using Service.WebAPIRequest;
+using Service.WordProcess;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,6 +39,8 @@ namespace AutoReservation
             services.AddScoped<ICoachService, CoachService>();
             services.AddScoped<IMessageFactory, MessageFactory>();
             services.AddScoped<IChangeUserCoachProcess, ChangeUserCoachProcess>();
+            services.AddScoped<IWordPrcoessFactory, WordPrcoessFactory>();
+            services.AddScoped<IGenerateMessage, GenerateMessage>();
 
             services.AddTransient<ICoachRepository, CoachRepository>();
 
