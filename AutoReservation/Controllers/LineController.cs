@@ -28,12 +28,16 @@ namespace AutoReservation.Controllers
 
         private readonly string keywords = "\u9810\u7D04";
 
+        private readonly string select = "\u67e5\u8a62";
+
         private readonly ICoachRepository _coachRepository;
 
         private readonly ICoachService _coachService;
 
         private readonly IMessageFactory _messageFactory;
-        public LineController(IConfiguration configuration, IWebAPIRequest webAPIRequest, ICoachRepository coachRepository, ICoachService coachService, IMessageFactory messageFactory)
+
+        private readonly IChangeUserCoachProcess _changeUserCoachProcess;
+        public LineController(IConfiguration configuration, IWebAPIRequest webAPIRequest, ICoachRepository coachRepository, ICoachService coachService, IMessageFactory messageFactory, IChangeUserCoachProcess changeUserCoachProcess)
         {
 
             _configuration = configuration;
@@ -41,6 +45,7 @@ namespace AutoReservation.Controllers
             _coachRepository = coachRepository;
             _coachService = coachService;
             _messageFactory = messageFactory;
+            _changeUserCoachProcess = changeUserCoachProcess;
         }
 
         [HttpPost("webhook")]
@@ -77,43 +82,59 @@ namespace AutoReservation.Controllers
                                     }
                                     else
                                     {
-                                        var coach = UserReservation.GetUserCoach(userId);
-                                        switch (UserReservation.GetUserReservationProcession(userId)?.ReservationProcession)
+                                        if (messageevent.message.text.Contains(select))
                                         {
-                                            case ReservationProcession.ChooseingCoaches:
-                                                //要進入輸入開始時間
-                                                ChangeUserReservationProcessing(messageevent.source.userId, ReservationProcession.InputStartTime);
+                                            //查詢
+                                            var coachUserTimes = await _coachRepository.SelectUserCoachTime(userId);
 
-                                                messgae = GenerateTextMessage("請輸入開始時間");
-                                                break;
-                                            case ReservationProcession.InputStartTime:
-                                                var inputStartTime = DateTimeOffset.Parse(messageevent.message.text);
-                                                coach.StartTime = inputStartTime;
-                                                UserReservation.InsertCoachTime(coach, userId);
+                                            var messageObjectList = new List<string>();
 
-                                                //要進入結束時間
-                                                ChangeUserReservationProcessing(messageevent.source.userId, ReservationProcession.InputEndTime);
-                                                messgae = GenerateTextMessage("請輸入結束時間");
-                                                break;
-                                            case ReservationProcession.InputEndTime:
-                                                var inputEndTime = DateTimeOffset.Parse(messageevent.message.text);
-                                                coach.EndTime = inputEndTime;
-                                                UserReservation.InsertCoachTime(coach, userId);
+                                            foreach (var coachUserTime in coachUserTimes)
+                                            {
+                                                var messageObject = $"教練名稱:{coachUserTime.Name}，" +
+                                                    $"開始時間:{DateTimeOffset.FromUnixTimeMilliseconds(coachUserTime.StartTime).ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")}，" +
+                                                    $"結束時間:{DateTimeOffset.FromUnixTimeMilliseconds(coachUserTime.EndTime).ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")}";
 
-                                                var userCoach=UserReservation.GetUserCoach(userId);
-                                                var coachTimeNo=await _coachRepository.InsertCoachTime(userCoach);
-                                                UserCoachTimeDTO userCoachTimeDTO = new UserCoachTimeDTO();
-                                                userCoachTimeDTO.coachTiemNo = coachTimeNo;
-                                                userCoachTimeDTO.userId = userId;
-                                                await _coachRepository.InsertUserCoachTime(userCoachTimeDTO);
+                                                messageObjectList.Add(messageObject);
+                                            }
 
-                                                //要進入流程結束
-                                                ChangeUserReservationProcessing(messageevent.source.userId, ReservationProcession.EndProcessing);
-                                                messgae = GenerateTextMessage("謝謝你");
-                                                break;
-                                            default:
-                                                messgae = GenerateTextMessage(messageevent.message.text);
-                                                break;
+
+
+                                            messgae = GenerateTextMessage(string.Join("\n", messageObjectList));
+                                        }
+                                        else
+                                        {
+                                            switch (UserReservation.GetUserReservationProcession(userId)?.ReservationProcession)
+                                            {
+                                                case ReservationProcession.ChooseingCoaches:
+                                                    //要進入輸入開始時間
+                                                    ChangeUserReservationProcessing(messageevent.source.userId, ReservationProcession.InputStartTime);
+
+                                                    messgae = GenerateTextMessage("請輸入開始時間");
+                                                    break;
+                                                case ReservationProcession.InputStartTime:
+                                                    //要進入結束時間
+
+                                                    _changeUserCoachProcess.UserStartTime(messageevent.message.text, userId);
+
+                                                    ChangeUserReservationProcessing(messageevent.source.userId, ReservationProcession.InputEndTime);
+                                                    messgae = GenerateTextMessage("請輸入結束時間");
+                                                    break;
+                                                case ReservationProcession.InputEndTime:
+
+                                                    _changeUserCoachProcess.UserEndTime(messageevent.message.text, userId);
+
+                                                    await _changeUserCoachProcess.InsertUserCoah(userId);
+
+                                                    //要進入流程結束
+                                                    ChangeUserReservationProcessing(messageevent.source.userId, ReservationProcession.EndProcessing);
+                                                    messgae = GenerateTextMessage("謝謝你");
+                                                    UserReservation.Clear(userId);
+                                                    break;
+                                                default:
+                                                    messgae = GenerateTextMessage(messageevent.message.text);
+                                                    break;
+                                            }
                                         }
                                     }
                                 }
@@ -181,7 +202,7 @@ namespace AutoReservation.Controllers
         }
 
         [HttpGet("create/UserCoachTime")]
-        public async Task CreateUserCoachTime() 
+        public async Task CreateUserCoachTime()
         {
             await _coachRepository.CreateUserCoachTimeTable();
         }

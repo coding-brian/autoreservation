@@ -36,6 +36,7 @@ namespace AutoReservation
             services.AddScoped<IWebAPIRequest, WebAPIRequest>();
             services.AddScoped<ICoachService, CoachService>();
             services.AddScoped<IMessageFactory, MessageFactory>();
+            services.AddScoped<IChangeUserCoachProcess, ChangeUserCoachProcess>();
 
             services.AddTransient<ICoachRepository, CoachRepository>();
 
@@ -56,9 +57,10 @@ namespace AutoReservation
 
             app.UseSwagger();
 
-            app.UseSwaggerUI(x=> {
+            app.UseSwaggerUI(x =>
+            {
 
-                x.SwaggerEndpoint("/swagger/v1/swagger.json","api v1");
+                x.SwaggerEndpoint("/swagger/v1/swagger.json", "api v1");
             });
 
             app.UseHttpsRedirection();

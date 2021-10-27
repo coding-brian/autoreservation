@@ -261,5 +261,46 @@ namespace Repository
 
             return result > 0;
         }
+
+        public async Task<List<CoachUserTimeDTO>> SelectUserCoachTime(string userId)
+        {
+            try
+            {
+                string sql = @$"Select co.name,ct.starttime,ct.endtime from  UserCoachTime uc
+                            join CoachTime ct
+                            on uc.coachTiemNo=ct.seqno
+                            join Coach co 
+                            on ct.coachid=co.id
+                            where uc.userId='{userId}'";
+
+                var result = new List<CoachUserTimeDTO>();
+
+                using (var conn = new NpgsqlConnection(_connectString))
+                {
+                    conn.Open();
+
+                    using (var command = new NpgsqlCommand(sql, conn))
+                    {
+                        var reader = await command.ExecuteReaderAsync();
+
+                        while (reader.Read())
+                        {
+                            var coachUserTime = new CoachUserTimeDTO();
+                            coachUserTime.Name = reader.GetFieldValue<string>(0);
+                            coachUserTime.StartTime = reader.GetFieldValue<long>(1);
+                            coachUserTime.EndTime = reader.GetFieldValue<long>(2);
+                            result.Add(coachUserTime);
+                        }
+                    }
+                    conn.Close();
+                }
+
+                return result;
+            }
+            catch (Exception e) 
+            {
+                throw e;
+            }
+        }
     }
 }

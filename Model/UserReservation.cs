@@ -26,7 +26,7 @@ namespace Model
             }
         }
 
-        public static void Initial() 
+        public static void Initial()
         {
             instance = Instance;
         }
@@ -63,9 +63,9 @@ namespace Model
 
         public static void ChangeUserProcessing(string userId, ReservationProcession reservationProcession)
         {
-            var user = instance.TakeWhile(x => x.UserId == userId).FirstOrDefault();
+            var user = instance.TakeWhile(x => x.UserId == userId).ToList();
 
-            instance.ForEach(x =>
+            user.ForEach(x =>
             {
                 if (x.UserId == userId)
                 {
@@ -84,13 +84,20 @@ namespace Model
 
         public static void InsertCoachTime(CoachDTO coachDTO, string userId)
         {
-            instance.ForEach(x =>
+            var user = instance.TakeWhile(x => x.UserId == userId).ToList();
+
+            user.ForEach(x =>
             {
                 if (x.UserId == userId)
                 {
                     x.coachDTO = coachDTO;
                 }
             });
+        }
+
+        public static void Clear(string userId) 
+        {
+            instance.RemoveAll(x => x.UserId == userId);
         }
     }
 

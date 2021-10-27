@@ -18,5 +18,7 @@ namespace Repository
         Task CreateUserCoachTimeTable();
 
         Task<bool> InsertUserCoachTime(UserCoachTimeDTO userCoachTimeDTO);
+
+        Task<List<CoachUserTimeDTO>> SelectUserCoachTime(string userId);
     }
 }
