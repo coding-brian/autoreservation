@@ -2,6 +2,6 @@
 {
     public interface IWordPrcoessFactory
     {
-        IWordProcess Create(string word, string dataString = "");
+        IWordProcess Create(string word, string userId = "");
     }
 }

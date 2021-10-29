@@ -21,20 +21,28 @@ namespace Service.WordProcess
 
         public async Task<object> ProcessWord(string userId)
         {
+            var result = new object();
+
             var coachUserTimes = await _coachRepository.SelectUserCoachTime(userId);
 
             var messageObjectList = new List<string>();
 
-            foreach (var coachUserTime in coachUserTimes)
+            if (coachUserTimes.Count > 0)
             {
-                var messageObject = $"教練名稱:{coachUserTime.Name}，" +
-                    $"開始時間:{DateTimeOffset.FromUnixTimeMilliseconds(coachUserTime.StartTime).ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")}，" +
-                    $"結束時間:{DateTimeOffset.FromUnixTimeMilliseconds(coachUserTime.EndTime).ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")}";
+                foreach (var coachUserTime in coachUserTimes)
+                {
+                    var messageObject = $"教練名稱:{coachUserTime.Name}，" +
+                        $"開始時間:{DateTimeOffset.FromUnixTimeMilliseconds(coachUserTime.StartTime).ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")}，" +
+                        $"結束時間:{DateTimeOffset.FromUnixTimeMilliseconds(coachUserTime.EndTime).ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")}";
 
-                messageObjectList.Add(messageObject);
+                    messageObjectList.Add(messageObject);
+                }
+                result = _generateMessage.GenerateTextMessage(string.Join("\n", messageObjectList));
             }
-
-            var result=_generateMessage.GenerateTextMessage(string.Join("\n", messageObjectList));
+            else
+            {
+                result = _generateMessage.GenerateTextMessage("目前沒有任何預約");
+            }
 
             return result;
         }

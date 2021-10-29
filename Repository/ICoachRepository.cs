@@ -20,5 +20,7 @@ namespace Repository
         Task<bool> InsertUserCoachTime(UserCoachTimeDTO userCoachTimeDTO);
 
         Task<List<CoachUserTimeDTO>> SelectUserCoachTime(string userId);
+
+        Task<bool> DeleteUserCoachTime(string userId, int coachId);
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Model.Enum;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -88,6 +89,26 @@ namespace Model
             return user?.ReservationProcession;
         }
 
+        public static UserStage GetUserStage(string userId)
+        {
+            if (IsExist(userId))
+            {
+                switch (GetUserReservationProcession(userId))
+                {
+                    case ReservationProcession.ChooseingCoaches:
+                    case ReservationProcession.InputEndTime:
+                    case ReservationProcession.InputStartTime:
+                    case ReservationProcession.EndProcessing:
+                        return UserStage.ReservationStage;
+                    case ReservationProcession.EndCancel:
+                    case ReservationProcession.InputCoachId:
+                        return UserStage.CancelStage;
+                }
+            }
+
+            return UserStage.NoStage;
+        }
+
         public static void UpdateCoachTime(CoachDTO coachDTO, string userId)
         {
             var user = instance.TakeWhile(x => x.UserId == userId).ToList();
@@ -101,7 +122,7 @@ namespace Model
             });
         }
 
-        public static void Clear(string userId) 
+        public static void Clear(string userId)
         {
             instance.RemoveAll(x => x.UserId == userId);
         }
@@ -114,28 +135,5 @@ namespace Model
         public CoachDTO coachDTO { get; set; } = new CoachDTO();
 
         public ReservationProcession ReservationProcession { get; set; }
-    }
-
-    public enum ReservationProcession
-    {
-        /// <summary>
-        /// 正在選擇教練階段
-        /// </summary>
-        ChooseingCoaches,
-
-        /// <summary>
-        /// 正在輸入開始時間階段
-        /// </summary>
-        InputStartTime,
-
-        /// <summary>
-        /// 正在輸入結束時間階段
-        /// </summary>
-        InputEndTime,
-
-        /// <summary>
-        /// 結束預約流程
-        /// </summary>
-        EndProcessing,
     }
 }

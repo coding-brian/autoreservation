@@ -36,7 +36,7 @@ namespace Service.GenerateMessage
                     type = "postback",
                     label = coach.Name,
                     //text = $"我想查看{coach.Name}可以預約的時間",
-                    data = $"showreservation=true&&coach={coach.id}"
+                    data = $"showreservation=true&&coach={coach.Id}"
                 };
                 column.action = _messageFactory.ActinoGenerate("postback", messageObjct);
                 columns.Add(column);

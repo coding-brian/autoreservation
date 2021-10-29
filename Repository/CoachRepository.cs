@@ -144,7 +144,7 @@ namespace Repository
 
                 foreach (var coach in coaches)
                 {
-                    string sql = @$"UPDATE COACH set name='{coach.Name}',ImageUrl='{coach.ImageUrl}'  where id={coach.id}";
+                    string sql = @$"UPDATE COACH set name='{coach.Name}',ImageUrl='{coach.ImageUrl}'  where id={coach.Id}";
 
                     using (var command = new NpgsqlCommand(sql, conn))
                     {
@@ -174,7 +174,7 @@ namespace Repository
                     while (reader.Read())
                     {
                         var coachDTO = new CoachDTO();
-                        coachDTO.id = reader.GetInt32(0);
+                        coachDTO.Id = reader.GetInt32(0);
                         coachDTO.Name = reader.GetString(1);
                         coachDTO.ImageUrl = reader.GetString(2);
                         result.Add(coachDTO);
@@ -224,7 +224,7 @@ namespace Repository
             {
                 conn.Open();
 
-                var valueString = "(" + "'" + coach.StartTime.ToUnixTimeMilliseconds() + "'" + "," + "'" + coach.EndTime.ToUnixTimeMilliseconds() + "'" + "," + coach.id + ")";
+                var valueString = "(" + "'" + coach.StartTime.ToUnixTimeMilliseconds() + "'" + "," + "'" + coach.EndTime.ToUnixTimeMilliseconds() + "'" + "," + coach.Id + ")";
 
                 string sql = @$"INSERT INTO coachtime(starttime,endtime,coachid) VALUES {valueString} RETURNING seqno";
 
@@ -297,10 +297,45 @@ namespace Repository
 
                 return result;
             }
-            catch (Exception e) 
+            catch (Exception e)
             {
                 throw e;
             }
+        }
+
+        public async Task<bool> DeleteUserCoachTime(string userId, int coachId)
+        {
+            int result = default;
+            try
+            {
+                using (var conn = new NpgsqlConnection(_connectString))
+                {
+                    conn.Open();
+
+                    string sql = @$"
+with aaa AS(select coachtiemno from usercoachtime where userid='{userId}' and coachtiemno in (select seqno FROM coachtime where coachid='{coachId}'))
+
+delete from coachtime where seqno in (select coachtiemno from aaa);
+
+delete from usercoachtime WHERE  userid = '{userId}' and coachtiemno in (select seqno FROM coachtime where coachid='{coachId}');
+
+
+";
+
+                    using (var command = new NpgsqlCommand(sql, conn))
+                    {
+
+                        result = await command.ExecuteNonQueryAsync();
+                    }
+                    conn.Close();
+                }
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
+
+            return result > 0;
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Model;
+using Model.Enum;
 using Repository;
 using Service.GenerateMessage;
 using Service.MessageFatcory;
@@ -13,6 +14,8 @@ namespace Service.WordProcess
         private readonly string _reservation = "\u9810\u7D04";//預約
 
         private readonly string _select = "\u67e5\u8a62";//查詢
+
+        private readonly string _cancel = "\u53d6\u6d88";//取消
 
         private IWordProcess _wordProcess;
 
@@ -29,23 +32,42 @@ namespace Service.WordProcess
             _generateMessage = generateMessage;
         }
 
-        public IWordProcess Create(string word,string userId)
+        public IWordProcess Create(string word, string userId)
         {
             if (word.Contains(_select))
             {
                 _wordProcess = new SelectWordProcess(_coachRepository, _generateMessage);
+
             }
             else if (word.Contains(_reservation))
             {
-                _wordProcess = new ReservationWordProcess(_changeUserCoachProcess, _generateMessage, word);
+                if (word.Contains(_cancel))
+                {
+                    _wordProcess = new CancelWordProcess(_coachRepository, _generateMessage, word);
+                }
+                else
+                {
+                    _wordProcess = new ReservationWordProcess(_changeUserCoachProcess, _generateMessage, word);
+                }
             }
             else
             {
                 if (UserReservation.IsExist(userId) && UserReservation.GetUserReservationProcession(userId) != null)
                 {
-                    _wordProcess = new ReservationWordProcess(_changeUserCoachProcess, _generateMessage, word);
+                    switch (UserReservation.GetUserStage(userId))
+                    {
+                        case UserStage.ReservationStage:
+                            _wordProcess = new ReservationWordProcess(_changeUserCoachProcess, _generateMessage, word);
+                            break;
+                        case UserStage.CancelStage:
+                            _wordProcess = new CancelWordProcess(_coachRepository, _generateMessage, word);
+                            break;
+                        default:
+                            _wordProcess = new NoWordProcess(_generateMessage);
+                            break;
+                    }
                 }
-                else 
+                else
                 {
                     _wordProcess = new NoWordProcess(_generateMessage);
                 }

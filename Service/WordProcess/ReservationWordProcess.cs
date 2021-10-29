@@ -1,4 +1,5 @@
 ﻿using Model;
+using Model.Enum;
 using Model.Line;
 using Service.GenerateMessage;
 using Service.MessageFatcory;
@@ -31,6 +32,7 @@ namespace Service.WordProcess
             UserReservation.Initial();
             if (UserReservation.IsExist(userId) && UserReservation.GetUserReservationProcession(userId) != null)
             {
+                
                 switch (UserReservation.GetUserReservationProcession(userId))
                 {
                     case ReservationProcession.ChooseingCoaches:
@@ -42,12 +44,22 @@ namespace Service.WordProcess
                         break;
                     case ReservationProcession.InputStartTime:
                         //要進入結束時間
+                        DateTimeOffset dateTime;
+                        var parseResult=DateTimeOffset.TryParse(_dateString, out dateTime);
 
-                        _changeUserCoachProcess.UserStartTime(_dateString, userId);
+                        if (parseResult)
+                        {
+                            _changeUserCoachProcess.UserStartTime(_dateString, userId);
 
-                        UserReservation.ChangeUserProcessing(userId, ReservationProcession.InputEndTime);
+                            UserReservation.ChangeUserProcessing(userId, ReservationProcession.InputEndTime);
 
-                        message = _generateMessage.GenerateTextMessage("請輸入結束時間");
+                            message = _generateMessage.GenerateTextMessage("請輸入結束時間");
+                        }
+                        else 
+                        {
+                            message = _generateMessage.GenerateTextMessage("請輸入正確時間格式");
+                        }
+
                         break;
                     case ReservationProcession.InputEndTime:
 
@@ -61,6 +73,12 @@ namespace Service.WordProcess
                         message = _generateMessage.GenerateTextMessage("謝謝你");
                         UserReservation.Clear(userId);
                         break;
+                    default:
+                        //要進入選擇教練階段
+                        UserReservation.ChangeUserProcessing(userId, ReservationProcession.ChooseingCoaches);
+
+                        message = await _generateMessage.GenerateImageCarourselMessage();
+                        break;
                 }
             }
             else
@@ -73,33 +91,5 @@ namespace Service.WordProcess
 
             return message;
         }
-
-        //private async Task<ImageCarouselMessage> GenerateImageCarourselMessage()
-        //{
-        //    var result = new ImageCarouselMessage();
-
-        //    var columns = new List<Column>();
-
-        //    var coaches = await _coachService.GetCoaches();
-
-        //    foreach (var coach in coaches)
-        //    {
-        //        var column = new Column();
-        //        column.imageUrl = coach.ImageUrl;
-        //        var messageObjct = new PostBackAction
-        //        {
-        //            type = "postback",
-        //            label = coach.Name,
-        //            //text = $"我想查看{coach.Name}可以預約的時間",
-        //            data = $"showreservation=true&&coach={coach.id}"
-        //        };
-        //        column.action = _messageFactory.ActinoGenerate("postback", messageObjct);
-        //        columns.Add(column);
-        //    }
-
-        //    result = _messageFactory.GenerateImageCarouselMessage("歡迎你選擇", columns);
-
-        //    return result;
-        //}
     }
 }

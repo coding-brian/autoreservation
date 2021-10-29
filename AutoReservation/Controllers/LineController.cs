@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Model;
+using Model.Enum;
 using Model.Line;
 using Repository;
 using Service;
@@ -63,8 +64,7 @@ namespace AutoReservation.Controllers
             {
                 foreach (var messageevent in messages.events)
                 {
-                    var userId = messageevent.source.userId;
-                    UserReservationProcession userReservationProcession = new UserReservationProcession();
+                    var userId = messageevent.source.userId;                    
 
                     switch (messageevent.type)
                     {
@@ -92,7 +92,7 @@ namespace AutoReservation.Controllers
                             var coachTime = await _coachService.GetCoachTime(coachId);
 
                             CoachDTO coachdto = new CoachDTO();
-                            coachdto.id = coachId;
+                            coachdto.Id = coachId;
                             UserReservation.UpdateCoachTime(coachdto, userId);
                             UserReservation.ChangeUserProcessing(messageevent.source.userId, ReservationProcession.InputStartTime);
 

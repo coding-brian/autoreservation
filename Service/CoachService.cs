@@ -29,7 +29,7 @@ namespace Service
 
                 var endTime = DateTimeOffset.FromUnixTimeMilliseconds(caoch.EndTime);
 
-                coachObj.id = id;
+                coachObj.Id = id;
                 coachObj.StartTime = startTime.ToLocalTime();
                 coachObj.EndTime = endTime.ToLocalTime();
 
