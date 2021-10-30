@@ -9,7 +9,7 @@ namespace Repository
 {
     public class CoachRepository : ICoachRepository
     {
-        private string _connectString = "Server=ec2-35-175-17-88.compute-1.amazonaws.com;Port=5432;Username=rahavmxtnzzjeu;Password=75c3a0f809d9c9ba1d3d666519d66b23854daaa88f25400c84de1ddd1bd4471a;Database=d39cq48n58q1vi;SslMode=Require;TrustServerCertificate=True;";
+        private string _connectString = "";
 
         public async Task CreateTable()
         {
