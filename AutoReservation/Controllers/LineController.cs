@@ -23,7 +23,7 @@ namespace AutoReservation.Controllers
     public class LineController : ControllerBase
     {
 
-        private string _lineaccesstoken = "dGRpItttHICbmITq95Lii7tw67AfhAVj4EJJeuDHwC4EHWGWZeIjDAyH+wst0IPikKvLSoJN7J/N1m7sgWiiX6M5aMGGHgDsT5KgnR0LjEDLEleI4M+lQ3f4lNVmenXmV3TtT6WFO7csubyJSPYC0gdB04t89/1O/w1cDnyilFU=";
+        private string _lineaccesstoken = "";
 
         private readonly IConfiguration _configuration;
 
