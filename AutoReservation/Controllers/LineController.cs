@@ -63,7 +63,7 @@ namespace AutoReservation.Controllers
                 foreach (var messageevent in messages.events)
                 {
                     var userId = messageevent.source.userId;
-                    var factory = new WordPrcoessFactory(_coachRepository, _changeUserCoachProcess, _generateMessage);
+                    var factory = new WordPrcoessFactory(_coachRepository, _changeUserCoachProcess, _generateMessage, _coachService);
 
                     switch (messageevent.type)
                     {

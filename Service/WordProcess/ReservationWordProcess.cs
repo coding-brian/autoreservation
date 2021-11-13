@@ -16,13 +16,16 @@ namespace Service.WordProcess
 
         private readonly IGenerateMessage _generateMessage;
 
+        private readonly ICoachService _coachService;
+
         private readonly string _dateString;
 
-        public ReservationWordProcess(IChangeUserCoachProcess changeUserCoachProcess, IGenerateMessage generateMessage, string dateString)
+        public ReservationWordProcess(IChangeUserCoachProcess changeUserCoachProcess, IGenerateMessage generateMessage, string dateString, ICoachService coachService)
         {
             _changeUserCoachProcess = changeUserCoachProcess;
             _dateString = dateString;
             _generateMessage = generateMessage;
+            _coachService = coachService;
         }
 
         public async Task<object> ProcessWord(string userId)
@@ -50,11 +53,33 @@ namespace Service.WordProcess
 
                         if (parseResult)
                         {
-                            _changeUserCoachProcess.UserStartTime(dateTime.ToString(), userId);
+                            var userCoach = UserReservation.GetUserCoach(userId);
 
-                            UserReservation.ChangeUserProcessing(userId, ReservationProcession.InputEndTime);
+                            var coachtimes = await _coachService.GetCoachTime(userCoach.Id);
 
-                            message = _generateMessage.GenerateTextMessage("請輸入結束時間");
+                            var duplicateResult = false;
+                            foreach (var coachtime in coachtimes)
+                            {
+                                if (dateTime == coachtime.StartTime)
+                                {
+                                    duplicateResult = true;
+                                    break;
+                                }
+                            }
+
+                            if (duplicateResult)
+                            {
+                                //輸入時間重複
+                                message = _generateMessage.GenerateTextMessage("這個時間有人預訂了");
+                            }
+                            else
+                            {
+                                _changeUserCoachProcess.UserStartTime(dateTime.ToString(), userId);
+
+                                UserReservation.ChangeUserProcessing(userId, ReservationProcession.InputEndTime);
+
+                                message = _generateMessage.GenerateTextMessage("請輸入結束時間");
+                            }
                         }
                         else
                         {
@@ -70,17 +95,36 @@ namespace Service.WordProcess
                         if (endTimeParseResult)
                         {
                             var userCoach = UserReservation.GetUserCoach(userId);
+                            var coachtimes = await _coachService.GetCoachTime(userCoach.Id);
                             endTime = new DateTimeOffset(userCoach.StartTime.Year, userCoach.StartTime.Month, userCoach.StartTime.Day, endTime.Hour, endTime.Minute, endTime.Second, endTime.Millisecond, endTime.Offset);
 
-                            _changeUserCoachProcess.UserEndTime(endTime.ToString(), userId);
+                            var duplicateResult = false;
+                            foreach (var coachtime in coachtimes)
+                            {
+                                if (endTime == coachtime.EndTime)
+                                {
+                                    duplicateResult = true;
+                                    break;
+                                }
+                            }
 
-                            await _changeUserCoachProcess.InsertUserCoah(userId);
+                            if (duplicateResult)
+                            {
+                                //輸入時間重複
+                                message = _generateMessage.GenerateTextMessage("這個時間有人預訂了");
+                            }
+                            else
+                            {
+                                _changeUserCoachProcess.UserEndTime(endTime.ToString(), userId);
 
-                            //要進入流程結束
-                            UserReservation.ChangeUserProcessing(userId, ReservationProcession.EndProcessing);
+                                await _changeUserCoachProcess.InsertUserCoah(userId);
 
-                            message = _generateMessage.GenerateTextMessage("謝謝你");
-                            UserReservation.Clear(userId);
+                                //要進入流程結束
+                                UserReservation.ChangeUserProcessing(userId, ReservationProcession.EndProcessing);
+
+                                message = _generateMessage.GenerateTextMessage("預約成功，謝謝你");
+                                UserReservation.Clear(userId);
+                            }
                         }
                         else
                         {
