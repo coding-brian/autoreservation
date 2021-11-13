@@ -34,14 +34,13 @@ namespace Service.WordProcess
 
         public IWordProcess Create(string word, string userId)
         {
-            if (word.Contains(_select))
+            if (word.Contains(KeyWords.select))
             {
                 _wordProcess = new SelectWordProcess(_coachRepository, _generateMessage);
-
             }
-            else if (word.Contains(_reservation))
+            else if (word.Contains(KeyWords.reservation))
             {
-                if (word.Contains(_cancel))
+                if (word.Contains(KeyWords.cancel))
                 {
                     _wordProcess = new CancelWordProcess(_coachRepository, _generateMessage, word);
                 }
@@ -59,9 +58,11 @@ namespace Service.WordProcess
                         case UserStage.ReservationStage:
                             _wordProcess = new ReservationWordProcess(_changeUserCoachProcess, _generateMessage, word);
                             break;
+
                         case UserStage.CancelStage:
                             _wordProcess = new CancelWordProcess(_coachRepository, _generateMessage, word);
                             break;
+
                         default:
                             _wordProcess = new NoWordProcess(_generateMessage);
                             break;

@@ -22,16 +22,13 @@ namespace AutoReservation.Controllers
     [ApiController]
     public class LineController : ControllerBase
     {
-
         private string _lineaccesstoken = "dGRpItttHICbmITq95Lii7tw67AfhAVj4EJJeuDHwC4EHWGWZeIjDAyH+wst0IPikKvLSoJN7J/N1m7sgWiiX6M5aMGGHgDsT5KgnR0LjEDLEleI4M+lQ3f4lNVmenXmV3TtT6WFO7csubyJSPYC0gdB04t89/1O/w1cDnyilFU=";
 
         private readonly IConfiguration _configuration;
 
         private readonly IWebAPIRequest _webAPIRequest;
 
-        private readonly string keywords = "\u9810\u7D04";
-
-        private readonly string select = "\u67e5\u8a62";
+        private readonly string _reservation = "\u9810\u7D04";//預約
 
         private readonly ICoachRepository _coachRepository;
 
@@ -43,9 +40,10 @@ namespace AutoReservation.Controllers
 
         private readonly IGenerateMessage _generateMessage;
 
+        private IWordProcess _wordProcess;
+
         public LineController(IConfiguration configuration, IWebAPIRequest webAPIRequest, ICoachRepository coachRepository, ICoachService coachService, IMessageFactory messageFactory, IChangeUserCoachProcess changeUserCoachProcess, IWordPrcoessFactory wordPrcoessFactory, IGenerateMessage generateMessage)
         {
-
             _configuration = configuration;
             _webAPIRequest = webAPIRequest;
             _coachRepository = coachRepository;
@@ -64,7 +62,8 @@ namespace AutoReservation.Controllers
             {
                 foreach (var messageevent in messages.events)
                 {
-                    var userId = messageevent.source.userId;                    
+                    var userId = messageevent.source.userId;
+                    var factory = new WordPrcoessFactory(_coachRepository, _changeUserCoachProcess, _generateMessage);
 
                     switch (messageevent.type)
                     {
@@ -77,35 +76,36 @@ namespace AutoReservation.Controllers
                                 }
                                 else
                                 {
-                                    var factory = new WordPrcoessFactory(_coachRepository, _changeUserCoachProcess, _generateMessage);
-                                    var wordProcess = factory.Create(messageevent.message.text, userId);
-                                    returnMessage = await wordProcess.ProcessWord(userId);
+                                    _wordProcess = factory.Create(messageevent.message.text, userId);
+                                    returnMessage = await _wordProcess.ProcessWord(userId);
                                 }
                             }
                             break;
+
                         case "postback":
                             var request = Request.Scheme + "://" + Request.Host;
                             Uri uri = new Uri(request + "?" + messageevent.postback.data);
                             var uriQuery = HttpUtility.ParseQueryString(uri.Query);
                             var showReservation = uriQuery.Get("showreservation");
                             var coachId = Convert.ToInt32(uriQuery.Get("coach"));
-                            var coachTime = await _coachService.GetCoachTime(coachId);
+                            //var coachTime = await _coachService.GetCoachTime(coachId);
 
                             CoachDTO coachdto = new CoachDTO();
                             coachdto.Id = coachId;
                             UserReservation.UpdateCoachTime(coachdto, userId);
-                            UserReservation.ChangeUserProcessing(messageevent.source.userId, ReservationProcession.InputStartTime);
+                            UserReservation.ChangeUserProcessing(messageevent.source.userId, ReservationProcession.ChooseingCoaches);
 
-                            var timeList = new List<string>();
-                            foreach (var coach in coachTime)
-                            {
-                                var aaa = coach.StartTime.ToString("yyyy/MM/dd HH:mm:ss") + "~" + coach.EndTime.ToString("yyyy/MM/dd HH:mm:ss");
-                                timeList.Add(aaa);
-                            }
+                            //var timeList = new List<string>();
+                            //foreach (var coach in coachTime)
+                            //{
+                            //    var timeObj = coach.StartTime.ToString("yyyy/MM/dd HH:mm:ss") + "~" + coach.EndTime.ToString("yyyy/MM/dd HH:mm:ss");
+                            //    timeList.Add(timeObj);
+                            //}
+                            _wordProcess = factory.Create(KeyWords.reservation, userId);
+                            returnMessage = _wordProcess.ProcessWord(userId);
+                            var message = "請輸入你要預約的日期與時間\n(例:2020/10/10 10:00:00)";
 
-                            var temp = "請排除以下時間，再輸入您要預約的時間:\n" + string.Join("\n", timeList);
-
-                            returnMessage = _generateMessage.GenerateTextMessage(temp);
+                            returnMessage = _generateMessage.GenerateTextMessage(message);
 
                             break;
                     }
@@ -172,8 +172,6 @@ namespace AutoReservation.Controllers
         /// </summary>
         private void PushMessage()
         {
-
-
         }
 
         /// <summary>

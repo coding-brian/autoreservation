@@ -83,7 +83,6 @@ namespace Model
 
         public static ReservationProcession? GetUserReservationProcession(string userId)
         {
-
             var user = instance?.TakeWhile(x => x.UserId == userId)?.FirstOrDefault();
 
             return user?.ReservationProcession;
@@ -100,6 +99,7 @@ namespace Model
                     case ReservationProcession.InputStartTime:
                     case ReservationProcession.EndProcessing:
                         return UserStage.ReservationStage;
+
                     case ReservationProcession.EndCancel:
                     case ReservationProcession.InputCoachId:
                         return UserStage.CancelStage;
