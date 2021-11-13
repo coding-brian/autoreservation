@@ -25,11 +25,14 @@ namespace Service.WordProcess
 
         private readonly IGenerateMessage _generateMessage;
 
-        public WordPrcoessFactory(ICoachRepository coachRepository, IChangeUserCoachProcess changeUserCoachProcess, IGenerateMessage generateMessage)
+        private readonly ICoachService _coachService;
+
+        public WordPrcoessFactory(ICoachRepository coachRepository, IChangeUserCoachProcess changeUserCoachProcess, IGenerateMessage generateMessage, ICoachService coachService)
         {
             _coachRepository = coachRepository;
             _changeUserCoachProcess = changeUserCoachProcess;
             _generateMessage = generateMessage;
+            _coachService = coachService;
         }
 
         public IWordProcess Create(string word, string userId)
@@ -46,7 +49,7 @@ namespace Service.WordProcess
                 }
                 else
                 {
-                    _wordProcess = new ReservationWordProcess(_changeUserCoachProcess, _generateMessage, word);
+                    _wordProcess = new ReservationWordProcess(_changeUserCoachProcess, _generateMessage, word, _coachService);
                 }
             }
             else
@@ -56,7 +59,7 @@ namespace Service.WordProcess
                     switch (UserReservation.GetUserStage(userId))
                     {
                         case UserStage.ReservationStage:
-                            _wordProcess = new ReservationWordProcess(_changeUserCoachProcess, _generateMessage, word);
+                            _wordProcess = new ReservationWordProcess(_changeUserCoachProcess, _generateMessage, word, _coachService);
                             break;
 
                         case UserStage.CancelStage:
